@@ -1,34 +1,41 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
-// Sprays water particles while the trigger button is held.
-// Put this on the Washing gun object.
+// Sprays water particles while the gun is held and the trigger is pressed.
+// Put this on the Washing gun object, next to the XR Grab Interactable.
+[RequireComponent(typeof(XRGrabInteractable))]
 public class WaterGun : MonoBehaviour
 {
     // The water spray particle system (a child at the tip of the gun).
     public ParticleSystem waterParticles;
 
-    // The trigger button. Use "XRI Right Interaction/Activate Value".
-    public InputActionReference triggerAction;
+    XRGrabInteractable grabInteractable;
 
-    void OnEnable()
+    void Awake()
     {
-        // Make sure the trigger button is listening for input.
-        triggerAction.action.Enable();
+        grabInteractable = GetComponent<XRGrabInteractable>();
+
+        // "Activated" = trigger pressed while holding the gun.
+        grabInteractable.activated.AddListener(StartSpray);
+        // "Deactivated" = trigger released.
+        grabInteractable.deactivated.AddListener(StopSpray);
+        // "Select Exited" = gun let go, so stop spraying too.
+        grabInteractable.selectExited.AddListener(StopSpray);
     }
 
-    void Update()
+    void StartSpray(ActivateEventArgs args)
     {
-        // The trigger gives a value from 0 (released) to 1 (fully pressed).
-        bool isPressed = triggerAction.action.ReadValue<float>() > 0.5f;
+        waterParticles.Play();
+    }
 
-        if (isPressed && !waterParticles.isPlaying)
-        {
-            waterParticles.Play();
-        }
-        else if (!isPressed && waterParticles.isPlaying)
-        {
-            waterParticles.Stop();
-        }
+    void StopSpray(DeactivateEventArgs args)
+    {
+        waterParticles.Stop();
+    }
+
+    void StopSpray(SelectExitEventArgs args)
+    {
+        waterParticles.Stop();
     }
 }
