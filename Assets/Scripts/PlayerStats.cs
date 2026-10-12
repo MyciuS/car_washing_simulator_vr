@@ -1,18 +1,19 @@
 using UnityEngine;
 
 // Holds the player's stats. Food goes down over time,
-// and when food is empty, health starts going down.
+// and when food is empty, energy starts going down.
+// (Later: sleeping will give energy back.)
 public class PlayerStats : MonoBehaviour
 {
-    public float health = 100f;
+    public float energy = 100f;
     public float food = 100f;
     public int money = 0;
 
     // How much food is lost per second.
     public float foodLossPerSecond = 0.5f;
 
-    // How much health is lost per second when starving.
-    public float starvingDamagePerSecond = 1f;
+    // How much energy is lost per second when starving.
+    public float starvingEnergyLossPerSecond = 1f;
 
     void Update()
     {
@@ -21,12 +22,12 @@ public class PlayerStats : MonoBehaviour
         if (food <= 0f)
         {
             food = 0f;
-            health -= starvingDamagePerSecond * Time.deltaTime;
+            energy -= starvingEnergyLossPerSecond * Time.deltaTime;
         }
 
-        if (health < 0f)
+        if (energy < 0f)
         {
-            health = 0f;
+            energy = 0f;
         }
     }
 
