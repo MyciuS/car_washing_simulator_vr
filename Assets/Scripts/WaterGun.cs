@@ -16,6 +16,10 @@ public class WaterGun : MonoBehaviour
     {
         grabInteractable = GetComponent<XRGrabInteractable>();
 
+        // If the spray wasn't dragged in, use the particle system on a child.
+        if (waterParticles == null)
+            waterParticles = GetComponentInChildren<ParticleSystem>();
+
         // "Activated" = trigger pressed while holding the gun.
         grabInteractable.activated.AddListener(StartSpray);
         // "Deactivated" = trigger released.

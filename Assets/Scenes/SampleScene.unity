@@ -7166,6 +7166,7 @@ MonoBehaviour:
   m_InteractionManager: {fileID: 0}
   m_Colliders:
   - {fileID: 26829812}
+  - {fileID: 1271990355}
   m_InteractionLayers:
     m_Bits: 2147483648
   m_DistanceCalculationMode: 1
@@ -7230,7 +7231,7 @@ MonoBehaviour:
   m_MatchOrientation: 0
   m_MatchDirectionalInput: 1
   m_TeleportTrigger: 0
-  m_FilterSelectionByHitNormal: 0
+  m_FilterSelectionByHitNormal: 1
   m_UpNormalToleranceDegrees: 30
   m_Teleporting:
     m_PersistentCalls:
