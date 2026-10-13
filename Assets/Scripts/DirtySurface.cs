@@ -1,17 +1,21 @@
 using UnityEngine;
 
-// A painted surface covered in dirt that can be cleaned. Put it on a Quad
-// (for example one side of the car). The dirt has two layers:
+// A painted surface covered in dirt that can be cleaned: one side of the test car,
+// or a whole car model. Works on any mesh whose UVs don't overlap. The dirt has two layers:
 //   - loose mud: comes off with water
 //   - grime: stubborn film that water alone can't remove
 // Soap can be sprayed on top. Once it has soaked long enough, the dirt under it
 // is "loosened" and water removes it (grime too) much faster (see CleaningTool).
-// The paint color comes from the object's material (Base Color).
-[RequireComponent(typeof(MeshRenderer), typeof(MeshCollider))]
+// The paint comes from the object's material (Base Map texture and Base Color).
+[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class DirtySurface : MonoBehaviour
 {
     // How detailed the dirt is: pixels per meter of surface.
     public float pixelsPerMeter = 80f;
+
+    // Optional: where the car starts dirty, painted by an artist (white = muddy).
+    // Leave empty for random road dirt (more mud low on the car).
+    public Texture2D dirtMask;
 
     [Header("Dirt colors")]
     public Color lightMudColor = new Color(0.55f, 0.45f, 0.32f);
@@ -32,6 +36,12 @@ public class DirtySurface : MonoBehaviour
     int width;
     int height;
     Color paintColor;
+    // Paint color of every pixel (from the material's Base Map), or null for one plain color.
+    Color[] paintPixels;
+    // Where every pixel is on the car in the world, and whether it is on the car at all
+    // (parts of a texture can be empty space between the pieces of the model).
+    Vector3[] pixelPosition;
+    bool[] onSurface;
     float[] looseDirt;
     float[] grime;
     float[] mudShade;
@@ -57,14 +67,16 @@ public class DirtySurface : MonoBehaviour
 
     void Start()
     {
-        // Texture size follows the real size of this side (a Quad is 1 x 1 before scaling).
-        width = Mathf.Max(8, Mathf.RoundToInt(transform.lossyScale.x * pixelsPerMeter));
-        height = Mathf.Max(8, Mathf.RoundToInt(transform.lossyScale.y * pixelsPerMeter));
-
+        Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
         Material material = GetComponent<MeshRenderer>().material;
         paintColor = material.GetColor("_BaseColor");
 
-        MakeStartingDirt();
+        ChooseTextureSize(mesh);
+        Texture paintTexture = material.GetTexture("_BaseMap");
+        if (paintTexture != null)
+            paintPixels = ReadTexture(paintTexture);
+        FindPixelPositions(mesh);
+        MakeStartingDirt(dirtMask != null ? ReadTexture(dirtMask) : null);
 
         // A texture that shows paint + dirt, put on this object's material.
         surfaceTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
@@ -80,11 +92,132 @@ public class DirtySurface : MonoBehaviour
         foamMask.SetPixelData(foamMaskPixels, 0);
         foamMask.Apply(false);
         material.SetTexture("_DetailMask", foamMask);
-        // Repeat the bubble pattern so bubbles have the same size on every side of the car.
+        // Repeat the bubble pattern so bubbles are about the same size everywhere.
         material.SetTextureScale("_DetailAlbedoMap",
-            new Vector2(transform.lossyScale.x / bubbleTileSize, transform.lossyScale.y / bubbleTileSize));
+            new Vector2(width / pixelsPerMeter / bubbleTileSize, height / pixelsPerMeter / bubbleTileSize));
 
         foamClumps = GetComponent<FoamClumps>();
+    }
+
+    // Picks the texture size from how many meters of the model one full texture covers,
+    // across (u) and up (v). A flat 4.2 m x 0.8 m side gets 336 x 64 pixels.
+    void ChooseTextureSize(Mesh mesh)
+    {
+        Vector3[] vertices = mesh.vertices;
+        Vector2[] uvs = mesh.uv;
+        int[] triangles = mesh.triangles;
+        float metersAcross = 0f, metersUp = 0f, totalArea = 0f;
+
+        for (int t = 0; t < triangles.Length; t += 3)
+        {
+            Vector3 p0 = transform.TransformPoint(vertices[triangles[t]]);
+            Vector3 p1 = transform.TransformPoint(vertices[triangles[t + 1]]);
+            Vector3 p2 = transform.TransformPoint(vertices[triangles[t + 2]]);
+            Vector2 uv1 = uvs[triangles[t + 1]] - uvs[triangles[t]];
+            Vector2 uv2 = uvs[triangles[t + 2]] - uvs[triangles[t]];
+            float uvArea = uv1.x * uv2.y - uv2.x * uv1.y;
+            if (Mathf.Abs(uvArea) < 1e-9f)
+                continue;
+
+            // How far you move in the world when u (or v) goes from 0 to 1 on this triangle.
+            Vector3 alongU = ((p1 - p0) * uv2.y - (p2 - p0) * uv1.y) / uvArea;
+            Vector3 alongV = ((p2 - p0) * uv1.x - (p1 - p0) * uv2.x) / uvArea;
+            float weight = Mathf.Abs(uvArea);
+            metersAcross += alongU.magnitude * weight;
+            metersUp += alongV.magnitude * weight;
+            totalArea += weight;
+        }
+
+        width = Mathf.Clamp(Mathf.RoundToInt(metersAcross / totalArea * pixelsPerMeter), 8, 2048);
+        height = Mathf.Clamp(Mathf.RoundToInt(metersUp / totalArea * pixelsPerMeter), 8, 2048);
+    }
+
+    // Goes over every triangle of the model and remembers, for each texture pixel,
+    // where that pixel is on the car in the world.
+    void FindPixelPositions(Mesh mesh)
+    {
+        Vector3[] vertices = mesh.vertices;
+        Vector2[] uvs = mesh.uv;
+        int[] triangles = mesh.triangles;
+        pixelPosition = new Vector3[width * height];
+        onSurface = new bool[width * height];
+        Vector2 size = new Vector2(width, height);
+
+        for (int t = 0; t < triangles.Length; t += 3)
+        {
+            // The triangle in texture pixels, and in the world.
+            Vector2 a = Vector2.Scale(uvs[triangles[t]], size);
+            Vector2 b = Vector2.Scale(uvs[triangles[t + 1]], size);
+            Vector2 c = Vector2.Scale(uvs[triangles[t + 2]], size);
+            Vector3 pa = transform.TransformPoint(vertices[triangles[t]]);
+            Vector3 pb = transform.TransformPoint(vertices[triangles[t + 1]]);
+            Vector3 pc = transform.TransformPoint(vertices[triangles[t + 2]]);
+            float area = (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
+            if (Mathf.Abs(area) < 1e-9f)
+                continue;
+
+            int minX = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.x, Mathf.Min(b.x, c.x))));
+            int maxX = Mathf.Min(width - 1, Mathf.CeilToInt(Mathf.Max(a.x, Mathf.Max(b.x, c.x))));
+            int minY = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.y, Mathf.Min(b.y, c.y))));
+            int maxY = Mathf.Min(height - 1, Mathf.CeilToInt(Mathf.Max(a.y, Mathf.Max(b.y, c.y))));
+            for (int y = minY; y <= maxY; y++)
+            {
+                for (int x = minX; x <= maxX; x++)
+                {
+                    // How much of each corner this pixel is made of (all three >= 0 means inside).
+                    Vector2 p = new Vector2(x + 0.5f, y + 0.5f);
+                    float wb = ((p.x - a.x) * (c.y - a.y) - (c.x - a.x) * (p.y - a.y)) / area;
+                    float wc = ((b.x - a.x) * (p.y - a.y) - (p.x - a.x) * (b.y - a.y)) / area;
+                    float wa = 1f - wb - wc;
+                    if (wa < 0f || wb < 0f || wc < 0f)
+                        continue;
+                    int i = y * width + x;
+                    pixelPosition[i] = pa * wa + pb * wb + pc * wc;
+                    onSurface[i] = true;
+                }
+            }
+        }
+
+        // Grow each piece 2 pixels into the empty space around it, so no lines show along its edges.
+        for (int pass = 0; pass < 2; pass++)
+        {
+            bool[] before = (bool[])onSurface.Clone();
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int i = y * width + x;
+                    if (before[i])
+                        continue;
+                    int n = -1;
+                    if (x > 0 && before[i - 1]) n = i - 1;
+                    else if (x < width - 1 && before[i + 1]) n = i + 1;
+                    else if (y > 0 && before[i - width]) n = i - width;
+                    else if (y < height - 1 && before[i + width]) n = i + width;
+                    if (n < 0)
+                        continue;
+                    pixelPosition[i] = pixelPosition[n];
+                    onSurface[i] = true;
+                }
+            }
+        }
+    }
+
+    // Reads any texture at this surface's size (works even if the texture isn't marked Read/Write).
+    Color[] ReadTexture(Texture source)
+    {
+        RenderTexture temporary = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+        Graphics.Blit(source, temporary);
+        RenderTexture previous = RenderTexture.active;
+        RenderTexture.active = temporary;
+        Texture2D copy = new Texture2D(width, height, TextureFormat.RGBA32, false);
+        copy.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+        copy.Apply(false);
+        RenderTexture.active = previous;
+        RenderTexture.ReleaseTemporary(temporary);
+        Color[] colors = copy.GetPixels();
+        Destroy(copy);
+        return colors;
     }
 
     // How much soap is at a point on the surface (uv = 0..1). Used by FoamClumps.
@@ -101,9 +234,10 @@ public class DirtySurface : MonoBehaviour
         return y * width + x;
     }
 
-    // Fills the surface with mud and grime: more mud low on the car (road dirt),
-    // plus random patches so it doesn't look like a flat color.
-    void MakeStartingDirt()
+    // Fills the surface with mud and grime. With a dirt mask the mud goes where the mask is white,
+    // otherwise there is more mud low on the car (road dirt). Random patches on top so it
+    // doesn't look like a flat color.
+    void MakeStartingDirt(Color[] mask)
     {
         int count = width * height;
         looseDirt = new float[count];
@@ -117,29 +251,38 @@ public class DirtySurface : MonoBehaviour
         foamMaskPixels = new byte[count];
         pixels = new Color32[count];
         float seed = Random.value * 100f;
+        float groundY = LowestPointOfCar();
 
-        for (int y = 0; y < height; y++)
+        for (int i = 0; i < count; i++)
         {
-            for (int x = 0; x < width; x++)
+            if (onSurface[i])
             {
-                // World position of this pixel (a Quad goes from -0.5 to 0.5).
-                Vector3 p = transform.TransformPoint((x + 0.5f) / width - 0.5f, (y + 0.5f) / height - 0.5f, 0f);
-                float heightAboveGround = p.y - transform.root.position.y;
-
+                Vector3 p = pixelPosition[i];
                 float patches = Noise(p * 3f, seed);                 // big mud patches
                 float splashes = Noise(p * 12f, seed + 50f);         // smaller splashes
                 float grain = Noise(p * 45f, seed + 90f);            // fine dried-mud grain
-                float road = Mathf.Clamp01(1.1f - heightAboveGround); // 1 near the ground, 0 at the top
+                float road = Mathf.Clamp01(1.1f - (p.y - groundY));  // 1 near the ground, 0 at the top
 
-                int i = y * width + x;
-                looseDirt[i] = Mathf.Clamp01(0.35f + road * 0.7f + (patches - 0.5f) * 0.8f
-                                             + Mathf.SmoothStep(0.55f, 0.8f, splashes) * 0.3f + (grain - 0.5f) * 0.2f);
+                if (mask != null)
+                    looseDirt[i] = Mathf.Clamp01(mask[i].grayscale * (0.75f + (patches - 0.5f) * 0.6f) + (grain - 0.5f) * 0.2f);
+                else
+                    looseDirt[i] = Mathf.Clamp01(0.35f + road * 0.7f + (patches - 0.5f) * 0.8f
+                                                 + Mathf.SmoothStep(0.55f, 0.8f, splashes) * 0.3f + (grain - 0.5f) * 0.2f);
                 grime[i] = Mathf.Clamp01(0.35f + patches * 0.4f);
                 mudShade[i] = Mathf.Clamp01(0.3f + road * 0.5f + (splashes - 0.5f) + (grain - 0.5f) * 0.4f);
                 foamVariation[i] = Mathf.Clamp01(Noise(p * 20f, seed + 130f));
-                UpdatePixel(i);
             }
+            UpdatePixel(i);
         }
+    }
+
+    // The lowest point of the whole car (all its meshes), used as "the ground" for road dirt.
+    float LowestPointOfCar()
+    {
+        float lowest = float.MaxValue;
+        foreach (MeshRenderer r in transform.root.GetComponentsInChildren<MeshRenderer>())
+            lowest = Mathf.Min(lowest, r.bounds.min.y);
+        return lowest;
     }
 
     // Smooth random value (0..1) that changes across the surface in any direction.
@@ -150,26 +293,32 @@ public class DirtySurface : MonoBehaviour
               + Mathf.PerlinNoise(p.x + 51f, p.z + seed)) / 3f * 1.4f - 0.2f;
     }
 
-    // Applies a tool (water, soap...) in a round spot around a point on the surface (uv = 0..1).
-    public void Spray(Vector2 uv, CleaningTool tool)
+    // Applies a tool (water, soap...) in a round spot around the point where it hit the car.
+    // uv = the hit's place on the texture, point/normal = the hit in the world.
+    public void Spray(Vector2 uv, Vector3 point, Vector3 normal, CleaningTool tool)
     {
         int centerX = (int)(uv.x * width);
         int centerY = (int)(uv.y * height);
-        int radius = Mathf.Max(1, Mathf.RoundToInt(tool.radius * pixelsPerMeter));
+        // Look at the pixels around the hit on the texture; the real distance on the car decides.
+        int reach = Mathf.CeilToInt(tool.radius * pixelsPerMeter * 1.5f);
 
-        for (int y = -radius; y <= radius; y++)
+        for (int y = -reach; y <= reach; y++)
         {
-            for (int x = -radius; x <= radius; x++)
+            for (int x = -reach; x <= reach; x++)
             {
                 int px = centerX + x;
                 int py = centerY + y;
-                float distance = Mathf.Sqrt(x * x + y * y) / radius;
-                if (distance > 1f || px < 0 || py < 0 || px >= width || py >= height)
+                if (px < 0 || py < 0 || px >= width || py >= height)
+                    continue;
+                int i = py * width + px;
+                if (!onSurface[i])
+                    continue;
+                float distance = Vector3.Distance(pixelPosition[i], point) / tool.radius;
+                if (distance > 1f)
                     continue;
 
                 // Strongest in the middle of the spot, weaker at the edge.
                 float amount = 1f - distance;
-                int i = py * width + px;
 
                 // Soap that has sat long enough makes the dirt easier to wash off.
                 if (soap[i] >= MinSoap && Time.time >= soapReadyTime[i])
@@ -203,7 +352,7 @@ public class DirtySurface : MonoBehaviour
         if (foamClumps != null)
         {
             if (tool.soapAdded > 0f)
-                foamClumps.SoapHit(uv, tool.radius);
+                foamClumps.SoapHit(uv, point, normal);
             else if (tool.soapRinse > 0f)
                 foamClumps.SoapChanged();
         }
@@ -267,7 +416,8 @@ public class DirtySurface : MonoBehaviour
     // Alpha is smoothness: clean paint is shiny, dirt is matte, foam is wet and a bit shiny.
     void UpdatePixel(int i)
     {
-        Color color = Color.Lerp(paintColor, grimeColor, grime[i] * grimeStrength);
+        Color paint = paintPixels != null ? paintPixels[i] * paintColor : paintColor;
+        Color color = Color.Lerp(paint, grimeColor, grime[i] * grimeStrength);
         Color mud = Color.Lerp(lightMudColor, darkMudColor, mudShade[i]);
         color = Color.Lerp(color, mud, looseDirt[i]);
         float smoothness = Mathf.Lerp(0.85f, 0.1f, Mathf.Max(looseDirt[i], grime[i] * grimeStrength));

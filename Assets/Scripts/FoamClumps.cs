@@ -1,10 +1,12 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-// Puffy 3D foam mounds sitting on a DirtySurface (one side of the car).
-// The side is split into a grid; where soap lands, each grid cell gets one mound.
-// Each mound's size follows the soap amount under it, so mounds grow as more soap
-// is sprayed and shrink away when water rinses the soap off. Neighbouring mounds
-// overlap, so together they look like one lumpy foam blanket.
+// Puffy 3D foam mounds sitting on a DirtySurface (a side of the test car or a whole car).
+// Where soap lands, a mound is added right there, pointing out of the car. Space is split
+// into small cubes with at most one mound each, so mounds spread out evenly.
+// Each mound's size follows the soap amount under it, so mounds grow as more soap is
+// sprayed and shrink away when water rinses the soap off. Neighbouring mounds overlap,
+// so together they look like one lumpy foam blanket.
 // Put this next to DirtySurface.
 [RequireComponent(typeof(DirtySurface))]
 public class FoamClumps : MonoBehaviour
@@ -19,101 +21,94 @@ public class FoamClumps : MonoBehaviour
     public float maxSize = 0.18f;
     // How tall a mound is compared to its width.
     public float height = 0.25f;
+    // Most mounds this surface can have (keeps VR fast on a big car).
+    public int maxMounds = 2000;
+
+    // One foam mound: where it sits, which way it points, and its own random look.
+    struct Mound
+    {
+        public Vector3 position;
+        public Vector3 rotation;   // points out of the car (euler angles)
+        public Vector2 uv;         // where its soap amount is read from
+        public Vector3Int cell;    // the little cube of space it belongs to
+        public float width;
+        public float appearAt;     // soap amount where it starts to show (uneven edges)
+    }
 
     DirtySurface surface;
     ParticleSystem foam;
-    ParticleSystem.Particle[] clumps;
-    int cellsX;
-    int cellsY;
-    bool[] cellHasMound;
+    List<Mound> mounds = new List<Mound>();
+    HashSet<Vector3Int> usedCells = new HashSet<Vector3Int>();
+    ParticleSystem.Particle[] particles;
     bool soapChanged;
 
     void Start()
     {
         surface = GetComponent<DirtySurface>();
         foam = Instantiate(foamPrefab, transform);
-        foam.transform.localPosition = Vector3.zero;
-        foam.transform.localRotation = Quaternion.identity;
-
-        // One grid cell per mound, sized from the real size of this side.
-        cellsX = Mathf.Max(1, Mathf.CeilToInt(transform.lossyScale.x / spacing));
-        cellsY = Mathf.Max(1, Mathf.CeilToInt(transform.lossyScale.y / spacing));
-        cellHasMound = new bool[cellsX * cellsY];
         var main = foam.main;
-        main.maxParticles = cellsX * cellsY;
-        clumps = new ParticleSystem.Particle[main.maxParticles];
+        main.maxParticles = maxMounds;
+        particles = new ParticleSystem.Particle[maxMounds];
     }
 
-    // Called by DirtySurface when soap lands at a point (uv = 0..1).
-    public void SoapHit(Vector2 uv, float radius)
+    // Called by DirtySurface when soap lands. uv = place on the texture, point/normal = place on the car.
+    public void SoapHit(Vector2 uv, Vector3 point, Vector3 normal)
     {
         soapChanged = true;
-
-        // Pick a random point inside the sprayed spot and find its grid cell.
-        Vector2 offset = Random.insideUnitCircle * radius;
-        float u = uv.x + offset.x / transform.lossyScale.x;
-        float v = uv.y + offset.y / transform.lossyScale.y;
-        if (u < 0f || v < 0f || u >= 1f || v >= 1f)
+        if (mounds.Count >= maxMounds)
             return;
-        int cx = (int)(u * cellsX);
-        int cy = (int)(v * cellsY);
-        if (cellHasMound[cy * cellsX + cx])
-            return;
-        cellHasMound[cy * cellsX + cx] = true;
+        Vector3Int cell = Vector3Int.FloorToInt(point / spacing);
+        if (!usedCells.Add(cell))
+            return; // this little cube already has a mound
 
-        // New mound near the middle of the cell (a little random, so it doesn't look like a grid).
-        Vector3 local = new Vector3((cx + Random.Range(0.2f, 0.8f)) / cellsX - 0.5f,
-                                    (cy + Random.Range(0.2f, 0.8f)) / cellsY - 0.5f, 0f);
-        var emit = new ParticleSystem.EmitParams();
-        emit.position = transform.TransformPoint(local);
-        // The mound mesh points along +Z; turn it so it sticks out of the car, with a random spin.
-        emit.rotation3D = new Vector3(0f, 180f, Random.Range(0f, 360f));
-        emit.startSize3D = Vector3.zero; // starts invisible, grows with the soap (see LateUpdate)
-        emit.startLifetime = 100000f;
-        foam.Emit(emit, 1);
+        Mound mound = new Mound();
+        mound.position = point;
+        // The mound mesh points along +Z: turn it to point out of the car, with a random spin.
+        mound.rotation = (Quaternion.LookRotation(normal) * Quaternion.Euler(0f, 0f, Random.Range(0f, 360f))).eulerAngles;
+        mound.uv = uv;
+        mound.cell = cell;
+        mound.width = Random.Range(minSize, maxSize);
+        mound.appearAt = Random.Range(0f, 0.25f);
+        mounds.Add(mound);
     }
 
-    // Called by DirtySurface when soap was rinsed.
+    // Called by DirtySurface when soap was rinsed or changed color.
     public void SoapChanged()
     {
         soapChanged = true;
     }
 
-    // Resize every mound to match the soap under it. Only runs when the soap changed.
+    // Rebuild the drawn mounds from the soap under each one. Only runs when the soap changed.
     void LateUpdate()
     {
         if (!soapChanged)
             return;
         soapChanged = false;
 
-        int count = foam.GetParticles(clumps);
-        for (int i = 0; i < count; i++)
+        int count = 0;
+        for (int i = mounds.Count - 1; i >= 0; i--)
         {
-            Vector3 local = transform.InverseTransformPoint(clumps[i].position);
-            Vector2 uv = new Vector2(local.x + 0.5f, local.y + 0.5f);
-            float soap = surface.GetSoap(uv);
-
+            Mound mound = mounds[i];
+            float soap = surface.GetSoap(mound.uv);
             if (soap <= 0f)
             {
-                // Soap gone: remove the mound and free its grid cell.
-                clumps[i].remainingLifetime = 0f;
-                int cx = Mathf.Clamp((int)(uv.x * cellsX), 0, cellsX - 1);
-                int cy = Mathf.Clamp((int)(uv.y * cellsY), 0, cellsY - 1);
-                cellHasMound[cy * cellsX + cx] = false;
+                // Soap gone: remove the mound and free its cube.
+                usedCells.Remove(mound.cell);
+                mounds.RemoveAt(i);
                 continue;
             }
 
-            // Every mound gets its own size and its own soap level where it appears,
-            // taken from its random seed, so foam edges look uneven.
-            float random1 = (clumps[i].randomSeed % 1000) / 1000f;
-            float random2 = (clumps[i].randomSeed / 1000 % 1000) / 1000f;
-            float width = Mathf.Lerp(minSize, maxSize, random1);
-            float grow = Mathf.Clamp01((soap - random2 * 0.25f) / 0.3f);
-            clumps[i].startSize3D = new Vector3(width, width, width * height) * grow;
-
+            float grow = Mathf.Clamp01((soap - mound.appearAt) / 0.3f);
+            ParticleSystem.Particle particle = new ParticleSystem.Particle();
+            particle.position = mound.position;
+            particle.rotation3D = mound.rotation;
+            particle.startSize3D = new Vector3(mound.width, mound.width, mound.width * height) * grow;
             // Turn light brown while the soap soaks, same as the foam on the paint.
-            clumps[i].startColor = Color.Lerp(Color.white, surface.soakedFoamColor, surface.GetSoakProgress(uv));
+            particle.startColor = Color.Lerp(Color.white, surface.soakedFoamColor, surface.GetSoakProgress(mound.uv));
+            particle.startLifetime = 100000f;
+            particle.remainingLifetime = 100000f;
+            particles[count++] = particle;
         }
-        foam.SetParticles(clumps, count);
+        foam.SetParticles(particles, count);
     }
 }
