@@ -592,6 +592,7 @@ GameObject:
   - component: {fileID: 81702585}
   - component: {fileID: 81702584}
   - component: {fileID: 81702583}
+  - component: {fileID: 81702587}
   m_Layer: 0
   m_Name: Back
   m_TagString: Untagged
@@ -632,6 +633,9 @@ MonoBehaviour:
   grimeColor: {r: 0.36, g: 0.34, b: 0.3, a: 1}
   grimeStrength: 0.6
   foamColor: {r: 0.95, g: 0.96, b: 0.98, a: 1}
+  soakedFoamColor: {r: 0.78, g: 0.65, b: 0.48, a: 1}
+  bubbleTileSize: 0.15
+  foamSmoothness: 0.6
 --- !u!23 &81702584
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -711,6 +715,23 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 81702581}
   m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &81702587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 81702581}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2806548f28cdfe4290d82f8c89baf22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FoamClumps
+  foamPrefab: {fileID: 7823160126158128456, guid: 324d1c5b1541df3439924936fa73ed0d, type: 3}
+  spacing: 0.08
+  minSize: 0.11
+  maxSize: 0.18
+  height: 0.25
 --- !u!1001 &108056931
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2556,6 +2577,7 @@ GameObject:
   - component: {fileID: 718013016}
   - component: {fileID: 718013015}
   - component: {fileID: 718013014}
+  - component: {fileID: 718013018}
   m_Layer: 0
   m_Name: Top
   m_TagString: Untagged
@@ -2596,6 +2618,9 @@ MonoBehaviour:
   grimeColor: {r: 0.36, g: 0.34, b: 0.3, a: 1}
   grimeStrength: 0.6
   foamColor: {r: 0.95, g: 0.96, b: 0.98, a: 1}
+  soakedFoamColor: {r: 0.78, g: 0.65, b: 0.48, a: 1}
+  bubbleTileSize: 0.15
+  foamSmoothness: 0.6
 --- !u!23 &718013015
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2675,6 +2700,23 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 718013012}
   m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &718013018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 718013012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2806548f28cdfe4290d82f8c89baf22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FoamClumps
+  foamPrefab: {fileID: 7823160126158128456, guid: 324d1c5b1541df3439924936fa73ed0d, type: 3}
+  spacing: 0.08
+  minSize: 0.11
+  maxSize: 0.18
+  height: 0.25
 --- !u!1001 &728264729
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2760,6 +2802,7 @@ GameObject:
   - component: {fileID: 765398506}
   - component: {fileID: 765398505}
   - component: {fileID: 765398504}
+  - component: {fileID: 765398508}
   m_Layer: 0
   m_Name: Right
   m_TagString: Untagged
@@ -2800,6 +2843,9 @@ MonoBehaviour:
   grimeColor: {r: 0.36, g: 0.34, b: 0.3, a: 1}
   grimeStrength: 0.6
   foamColor: {r: 0.95, g: 0.96, b: 0.98, a: 1}
+  soakedFoamColor: {r: 0.78, g: 0.65, b: 0.48, a: 1}
+  bubbleTileSize: 0.15
+  foamSmoothness: 0.6
 --- !u!23 &765398505
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2879,6 +2925,23 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 765398502}
   m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &765398508
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765398502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2806548f28cdfe4290d82f8c89baf22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FoamClumps
+  foamPrefab: {fileID: 7823160126158128456, guid: 324d1c5b1541df3439924936fa73ed0d, type: 3}
+  spacing: 0.08
+  minSize: 0.11
+  maxSize: 0.18
+  height: 0.25
 --- !u!1 &791971460
 GameObject:
   m_ObjectHideFlags: 0
@@ -3004,6 +3067,7 @@ GameObject:
   - component: {fileID: 871364721}
   - component: {fileID: 871364720}
   - component: {fileID: 871364719}
+  - component: {fileID: 871364723}
   m_Layer: 0
   m_Name: Front
   m_TagString: Untagged
@@ -3044,6 +3108,9 @@ MonoBehaviour:
   grimeColor: {r: 0.36, g: 0.34, b: 0.3, a: 1}
   grimeStrength: 0.6
   foamColor: {r: 0.95, g: 0.96, b: 0.98, a: 1}
+  soakedFoamColor: {r: 0.78, g: 0.65, b: 0.48, a: 1}
+  bubbleTileSize: 0.15
+  foamSmoothness: 0.6
 --- !u!23 &871364720
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -3123,6 +3190,23 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 871364717}
   m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &871364723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 871364717}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2806548f28cdfe4290d82f8c89baf22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FoamClumps
+  foamPrefab: {fileID: 7823160126158128456, guid: 324d1c5b1541df3439924936fa73ed0d, type: 3}
+  spacing: 0.08
+  minSize: 0.11
+  maxSize: 0.18
+  height: 0.25
 --- !u!1 &884793776
 GameObject:
   m_ObjectHideFlags: 0
@@ -9823,7 +9907,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2243020122894124685, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 39.07
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2243020122894124685, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
       propertyPath: m_LocalPosition.x
@@ -9855,7 +9939,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4750419573833148750, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 32.34
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4750419573833148750, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
       propertyPath: m_LocalPosition.x
@@ -12835,6 +12919,7 @@ GameObject:
   - component: {fileID: 1528210569}
   - component: {fileID: 1528210568}
   - component: {fileID: 1528210567}
+  - component: {fileID: 1528210571}
   m_Layer: 0
   m_Name: Left
   m_TagString: Untagged
@@ -12875,6 +12960,9 @@ MonoBehaviour:
   grimeColor: {r: 0.36, g: 0.34, b: 0.3, a: 1}
   grimeStrength: 0.6
   foamColor: {r: 0.95, g: 0.96, b: 0.98, a: 1}
+  soakedFoamColor: {r: 0.78, g: 0.65, b: 0.48, a: 1}
+  bubbleTileSize: 0.15
+  foamSmoothness: 0.6
 --- !u!23 &1528210568
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -12954,6 +13042,23 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1528210565}
   m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1528210571
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1528210565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2806548f28cdfe4290d82f8c89baf22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FoamClumps
+  foamPrefab: {fileID: 7823160126158128456, guid: 324d1c5b1541df3439924936fa73ed0d, type: 3}
+  spacing: 0.08
+  minSize: 0.11
+  maxSize: 0.18
+  height: 0.25
 --- !u!1 &1536018303
 GameObject:
   m_ObjectHideFlags: 0

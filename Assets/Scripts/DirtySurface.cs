@@ -19,7 +19,15 @@ public class DirtySurface : MonoBehaviour
     public Color grimeColor = new Color(0.36f, 0.34f, 0.3f);
     // How strongly the grime covers the paint (0 = invisible, 1 = fully).
     public float grimeStrength = 0.6f;
+
+    [Header("Foam")]
     public Color foamColor = new Color(0.95f, 0.96f, 0.98f);
+    // Foam slowly turns this color while it soaks. Fully this color = ready to rinse.
+    public Color soakedFoamColor = new Color(0.78f, 0.65f, 0.48f);
+    // How big one tile of the bubble pattern is on the car, in meters (smaller = smaller bubbles).
+    public float bubbleTileSize = 0.15f;
+    // How wet and shiny the foam looks (0 = matte, 1 = mirror).
+    public float foamSmoothness = 0.6f;
 
     int width;
     int height;
@@ -28,13 +36,22 @@ public class DirtySurface : MonoBehaviour
     float[] grime;
     float[] mudShade;
     float[] soap;
-    // The time (Time.time) when the soap on each pixel has soaked enough.
+    // When soap first landed on each pixel, and when it has soaked enough (Time.time).
+    float[] soapStartTime;
     float[] soapReadyTime;
     // True where soaked soap has loosened the dirt. Stays true after the soap is rinsed off.
     bool[] loosened;
+    // Random value per pixel so foam edges look uneven instead of perfectly round.
+    float[] foamVariation;
     Color32[] pixels;
     Texture2D surfaceTexture;
+    // Where the foam is (0..255 per pixel). The material uses it to show the bubble pattern only there.
+    byte[] foamMaskPixels;
+    Texture2D foamMask;
+    FoamClumps foamClumps;
     bool textureChanged;
+    // Timer for refreshing the soaking foam color (twice a second is enough).
+    float nextSoakRefresh;
 
     void Start()
     {
@@ -54,6 +71,26 @@ public class DirtySurface : MonoBehaviour
         surfaceTexture.Apply(false);
         material.SetTexture("_BaseMap", surfaceTexture);
         material.SetColor("_BaseColor", Color.white);
+
+        // Foam mask: the material's "Detail" bubble texture and bumps only show where foam is.
+        foamMask = new Texture2D(width, height, TextureFormat.Alpha8, false);
+        foamMask.wrapMode = TextureWrapMode.Clamp;
+        foamMask.SetPixelData(foamMaskPixels, 0);
+        foamMask.Apply(false);
+        material.SetTexture("_DetailMask", foamMask);
+        // Repeat the bubble pattern so bubbles have the same size on every side of the car.
+        material.SetTextureScale("_DetailAlbedoMap",
+            new Vector2(transform.lossyScale.x / bubbleTileSize, transform.lossyScale.y / bubbleTileSize));
+
+        foamClumps = GetComponent<FoamClumps>();
+    }
+
+    // How much soap is at a point on the surface (uv = 0..1). Used by FoamClumps.
+    public float GetSoap(Vector2 uv)
+    {
+        int x = Mathf.Clamp((int)(uv.x * width), 0, width - 1);
+        int y = Mathf.Clamp((int)(uv.y * height), 0, height - 1);
+        return soap[y * width + x];
     }
 
     // Fills the surface with mud and grime: more mud low on the car (road dirt),
@@ -65,8 +102,11 @@ public class DirtySurface : MonoBehaviour
         grime = new float[count];
         mudShade = new float[count];
         soap = new float[count];
+        soapStartTime = new float[count];
         soapReadyTime = new float[count];
         loosened = new bool[count];
+        foamVariation = new float[count];
+        foamMaskPixels = new byte[count];
         pixels = new Color32[count];
         float seed = Random.value * 100f;
 
@@ -88,6 +128,7 @@ public class DirtySurface : MonoBehaviour
                                              + Mathf.SmoothStep(0.55f, 0.8f, splashes) * 0.3f + (grain - 0.5f) * 0.2f);
                 grime[i] = Mathf.Clamp01(0.35f + patches * 0.4f);
                 mudShade[i] = Mathf.Clamp01(0.3f + road * 0.5f + (splashes - 0.5f) + (grain - 0.5f) * 0.4f);
+                foamVariation[i] = Mathf.Clamp01(Noise(p * 20f, seed + 130f));
                 UpdatePixel(i);
             }
         }
@@ -134,7 +175,10 @@ public class DirtySurface : MonoBehaviour
                 if (tool.soapAdded > 0f)
                 {
                     if (soap[i] <= 0f)
+                    {
+                        soapStartTime[i] = Time.time;
                         soapReadyTime[i] = Time.time + tool.soapSoakTime;
+                    }
                     soap[i] = Mathf.Min(1f, soap[i] + tool.soapAdded * amount);
                 }
                 soap[i] = Mathf.Max(0f, soap[i] - tool.soapRinse * amount);
@@ -144,6 +188,57 @@ public class DirtySurface : MonoBehaviour
         }
 
         textureChanged = true;
+
+        // Tell the 3D foam mounds: new soap may add a mound, any soap change resizes them.
+        if (foamClumps != null)
+        {
+            if (tool.soapAdded > 0f)
+                foamClumps.SoapHit(uv, tool.radius);
+            else if (tool.soapRinse > 0f)
+                foamClumps.SoapChanged();
+        }
+    }
+
+    // How far the soap at a point has soaked: 0 = just sprayed, 1 = ready to rinse.
+    public float GetSoakProgress(Vector2 uv)
+    {
+        int x = Mathf.Clamp((int)(uv.x * width), 0, width - 1);
+        int y = Mathf.Clamp((int)(uv.y * height), 0, height - 1);
+        return SoakProgress(y * width + x);
+    }
+
+    float SoakProgress(int i)
+    {
+        if (soap[i] <= 0f)
+            return 0f;
+        float soakTime = soapReadyTime[i] - soapStartTime[i];
+        if (soakTime <= 0f)
+            return 1f;
+        return Mathf.Clamp01((Time.time - soapStartTime[i]) / soakTime);
+    }
+
+    // Twice a second, recolor the soapy pixels so the foam slowly turns brown while it soaks.
+    void Update()
+    {
+        if (Time.time < nextSoakRefresh)
+            return;
+        nextSoakRefresh = Time.time + 0.5f;
+
+        bool anySoap = false;
+        for (int i = 0; i < soap.Length; i++)
+        {
+            if (soap[i] > 0f)
+            {
+                UpdatePixel(i);
+                anySoap = true;
+            }
+        }
+        if (anySoap)
+        {
+            textureChanged = true;
+            if (foamClumps != null)
+                foamClumps.SoapChanged(); // the 3D mounds change color too
+        }
     }
 
     // Send the new pixels to the GPU once per frame, only if something was cleaned.
@@ -153,19 +248,28 @@ public class DirtySurface : MonoBehaviour
         {
             surfaceTexture.SetPixels32(pixels);
             surfaceTexture.Apply(false);
+            foamMask.SetPixelData(foamMaskPixels, 0);
+            foamMask.Apply(false);
             textureChanged = false;
         }
     }
 
-    // Works out the color of one pixel: paint, then grime, then mud, then soap foam on top.
-    // Alpha is smoothness: clean paint is shiny, dirt and foam are matte.
+    // Works out the color of one pixel: paint, then grime, then mud, then foam on top.
+    // Alpha is smoothness: clean paint is shiny, dirt is matte, foam is wet and a bit shiny.
     void UpdatePixel(int i)
     {
         Color color = Color.Lerp(paintColor, grimeColor, grime[i] * grimeStrength);
         Color mud = Color.Lerp(lightMudColor, darkMudColor, mudShade[i]);
         color = Color.Lerp(color, mud, looseDirt[i]);
-        color = Color.Lerp(color, foamColor, soap[i] * 0.85f);
-        color.a = Mathf.Lerp(0.85f, 0.1f, Mathf.Max(looseDirt[i], grime[i] * grimeStrength, soap[i]));
+        float smoothness = Mathf.Lerp(0.85f, 0.1f, Mathf.Max(looseDirt[i], grime[i] * grimeStrength));
+
+        // Foam: uneven edges (foamVariation), thin foam still lets a little paint show through.
+        float foam = Mathf.Clamp01(soap[i] * 2.5f - foamVariation[i] * 0.6f);
+        // Foam turns from white to light brown while it soaks (brown = dirt loosened, ready to rinse).
+        Color currentFoamColor = Color.Lerp(foamColor, soakedFoamColor, SoakProgress(i));
+        color = Color.Lerp(color, currentFoamColor, foam * 0.92f);
+        color.a = Mathf.Lerp(smoothness, foamSmoothness, foam);
         pixels[i] = color;
+        foamMaskPixels[i] = (byte)(foam * 255f);
     }
 }
