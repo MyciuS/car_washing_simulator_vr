@@ -35,7 +35,7 @@ public class SprayCleaner : MonoBehaviour
             if (Physics.Raycast(point + normal * 0.05f, -normal, out RaycastHit rayHit, 0.1f)
                 && rayHit.collider.gameObject == other)
             {
-                surface.Spray(rayHit.textureCoord, cleaningTool);
+                surface.Spray(rayHit.textureCoord, rayHit.point, rayHit.normal, cleaningTool);
             }
         }
     }
