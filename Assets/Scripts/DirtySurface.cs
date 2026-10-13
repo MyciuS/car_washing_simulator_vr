@@ -52,6 +52,8 @@ public class DirtySurface : MonoBehaviour
     bool textureChanged;
     // Timer for refreshing the soaking foam color (twice a second is enough).
     float nextSoakRefresh;
+    // Less soap than this is invisible, so it counts as no soap (no bonus, gets rinsed away).
+    const float MinSoap = 0.05f;
 
     void Start()
     {
@@ -88,9 +90,15 @@ public class DirtySurface : MonoBehaviour
     // How much soap is at a point on the surface (uv = 0..1). Used by FoamClumps.
     public float GetSoap(Vector2 uv)
     {
+        return soap[PixelIndex(uv)];
+    }
+
+    // The pixel at a point on the surface (uv = 0..1).
+    int PixelIndex(Vector2 uv)
+    {
         int x = Mathf.Clamp((int)(uv.x * width), 0, width - 1);
         int y = Mathf.Clamp((int)(uv.y * height), 0, height - 1);
-        return soap[y * width + x];
+        return y * width + x;
     }
 
     // Fills the surface with mud and grime: more mud low on the car (road dirt),
@@ -164,7 +172,7 @@ public class DirtySurface : MonoBehaviour
                 int i = py * width + px;
 
                 // Soap that has sat long enough makes the dirt easier to wash off.
-                if (soap[i] > 0f && Time.time >= soapReadyTime[i])
+                if (soap[i] >= MinSoap && Time.time >= soapReadyTime[i])
                     loosened[i] = true;
                 float looseRemoval = loosened[i] ? tool.soakedLooseDirtRemoval : tool.looseDirtRemoval;
                 float grimeRemoval = loosened[i] ? tool.soakedGrimeRemoval : tool.grimeRemoval;
@@ -182,6 +190,8 @@ public class DirtySurface : MonoBehaviour
                     soap[i] = Mathf.Min(1f, soap[i] + tool.soapAdded * amount);
                 }
                 soap[i] = Mathf.Max(0f, soap[i] - tool.soapRinse * amount);
+                if (tool.soapRinse > 0f && soap[i] < MinSoap)
+                    soap[i] = 0f; // rinse away the last invisible bit too
 
                 UpdatePixel(i);
             }
@@ -202,9 +212,7 @@ public class DirtySurface : MonoBehaviour
     // How far the soap at a point has soaked: 0 = just sprayed, 1 = ready to rinse.
     public float GetSoakProgress(Vector2 uv)
     {
-        int x = Mathf.Clamp((int)(uv.x * width), 0, width - 1);
-        int y = Mathf.Clamp((int)(uv.y * height), 0, height - 1);
-        return SoakProgress(y * width + x);
+        return SoakProgress(PixelIndex(uv));
     }
 
     float SoakProgress(int i)
@@ -218,22 +226,23 @@ public class DirtySurface : MonoBehaviour
     }
 
     // Twice a second, recolor the soapy pixels so the foam slowly turns brown while it soaks.
+    // Only pixels still soaking (or that just finished) are recolored, so fully soaked foam costs nothing.
     void Update()
     {
         if (Time.time < nextSoakRefresh)
             return;
         nextSoakRefresh = Time.time + 0.5f;
 
-        bool anySoap = false;
+        bool anySoaking = false;
         for (int i = 0; i < soap.Length; i++)
         {
-            if (soap[i] > 0f)
+            if (soap[i] > 0f && Time.time - 0.5f < soapReadyTime[i])
             {
                 UpdatePixel(i);
-                anySoap = true;
+                anySoaking = true;
             }
         }
-        if (anySoap)
+        if (anySoaking)
         {
             textureChanged = true;
             if (foamClumps != null)
