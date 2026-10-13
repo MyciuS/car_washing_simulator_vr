@@ -3,7 +3,9 @@ using UnityEngine;
 // A painted surface covered in dirt that can be cleaned. Put it on a Quad
 // (for example one side of the car). The dirt has two layers:
 //   - loose mud: comes off with water
-//   - grime: stubborn film that water can't remove (soap and brushes come later)
+//   - grime: stubborn film that water alone can't remove
+// Soap can be sprayed on top. Once it has soaked long enough, the dirt under it
+// is "loosened" and water removes it (grime too) much faster (see CleaningTool).
 // The paint color comes from the object's material (Base Color).
 [RequireComponent(typeof(MeshRenderer), typeof(MeshCollider))]
 public class DirtySurface : MonoBehaviour
@@ -17,6 +19,7 @@ public class DirtySurface : MonoBehaviour
     public Color grimeColor = new Color(0.36f, 0.34f, 0.3f);
     // How strongly the grime covers the paint (0 = invisible, 1 = fully).
     public float grimeStrength = 0.6f;
+    public Color foamColor = new Color(0.95f, 0.96f, 0.98f);
 
     int width;
     int height;
@@ -24,6 +27,11 @@ public class DirtySurface : MonoBehaviour
     float[] looseDirt;
     float[] grime;
     float[] mudShade;
+    float[] soap;
+    // The time (Time.time) when the soap on each pixel has soaked enough.
+    float[] soapReadyTime;
+    // True where soaked soap has loosened the dirt. Stays true after the soap is rinsed off.
+    bool[] loosened;
     Color32[] pixels;
     Texture2D surfaceTexture;
     bool textureChanged;
@@ -56,6 +64,9 @@ public class DirtySurface : MonoBehaviour
         looseDirt = new float[count];
         grime = new float[count];
         mudShade = new float[count];
+        soap = new float[count];
+        soapReadyTime = new float[count];
+        loosened = new bool[count];
         pixels = new Color32[count];
         float seed = Random.value * 100f;
 
@@ -90,8 +101,8 @@ public class DirtySurface : MonoBehaviour
               + Mathf.PerlinNoise(p.x + 51f, p.z + seed)) / 3f * 1.4f - 0.2f;
     }
 
-    // Removes dirt in a round spot around a point on the surface (uv = 0..1).
-    public void Clean(Vector2 uv, CleaningTool tool)
+    // Applies a tool (water, soap...) in a round spot around a point on the surface (uv = 0..1).
+    public void Spray(Vector2 uv, CleaningTool tool)
     {
         int centerX = (int)(uv.x * width);
         int centerY = (int)(uv.y * height);
@@ -107,11 +118,27 @@ public class DirtySurface : MonoBehaviour
                 if (distance > 1f || px < 0 || py < 0 || px >= width || py >= height)
                     continue;
 
-                // Clean most in the middle of the spot, less at the edge.
+                // Strongest in the middle of the spot, weaker at the edge.
                 float amount = 1f - distance;
                 int i = py * width + px;
-                looseDirt[i] = Mathf.Max(0f, looseDirt[i] - tool.looseDirtRemoval * amount);
-                grime[i] = Mathf.Max(0f, grime[i] - tool.grimeRemoval * amount);
+
+                // Soap that has sat long enough makes the dirt easier to wash off.
+                if (soap[i] > 0f && Time.time >= soapReadyTime[i])
+                    loosened[i] = true;
+                float looseRemoval = loosened[i] ? tool.soakedLooseDirtRemoval : tool.looseDirtRemoval;
+                float grimeRemoval = loosened[i] ? tool.soakedGrimeRemoval : tool.grimeRemoval;
+                looseDirt[i] = Mathf.Max(0f, looseDirt[i] - looseRemoval * amount);
+                grime[i] = Mathf.Max(0f, grime[i] - grimeRemoval * amount);
+
+                // Fresh soap starts its soak timer; water rinses soap off.
+                if (tool.soapAdded > 0f)
+                {
+                    if (soap[i] <= 0f)
+                        soapReadyTime[i] = Time.time + tool.soapSoakTime;
+                    soap[i] = Mathf.Min(1f, soap[i] + tool.soapAdded * amount);
+                }
+                soap[i] = Mathf.Max(0f, soap[i] - tool.soapRinse * amount);
+
                 UpdatePixel(i);
             }
         }
@@ -130,14 +157,15 @@ public class DirtySurface : MonoBehaviour
         }
     }
 
-    // Works out the color of one pixel: paint, then grime on top, then mud on top.
-    // Alpha is smoothness: clean paint is shiny, dirt is matte.
+    // Works out the color of one pixel: paint, then grime, then mud, then soap foam on top.
+    // Alpha is smoothness: clean paint is shiny, dirt and foam are matte.
     void UpdatePixel(int i)
     {
         Color color = Color.Lerp(paintColor, grimeColor, grime[i] * grimeStrength);
         Color mud = Color.Lerp(lightMudColor, darkMudColor, mudShade[i]);
         color = Color.Lerp(color, mud, looseDirt[i]);
-        color.a = Mathf.Lerp(0.85f, 0.1f, Mathf.Max(looseDirt[i], grime[i] * grimeStrength));
+        color = Color.Lerp(color, foamColor, soap[i] * 0.85f);
+        color.a = Mathf.Lerp(0.85f, 0.1f, Mathf.Max(looseDirt[i], grime[i] * grimeStrength, soap[i]));
         pixels[i] = color;
     }
 }

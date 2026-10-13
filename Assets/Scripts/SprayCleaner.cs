@@ -1,21 +1,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Put this on the water spray particle system. When water drops hit something
-// with a DirtySurface, the spot where they hit gets cleaned.
+// Put this on a spray particle system (water or soap). When drops hit something
+// with a DirtySurface, the tool is applied to the spot where they hit.
 // The particle system's Collision module needs "Send Collision Messages" turned on.
 [RequireComponent(typeof(ParticleSystem))]
-public class WaterCleaner : MonoBehaviour
+public class SprayCleaner : MonoBehaviour
 {
-    // How this water cleans (Assets/Cleaning/Water.asset).
+    // What this spray does to the car (Assets/Cleaning/Water.asset or Soap.asset).
     public CleaningTool cleaningTool;
 
-    ParticleSystem waterParticles;
+    ParticleSystem sprayParticles;
     List<ParticleCollisionEvent> hits = new List<ParticleCollisionEvent>();
 
     void Awake()
     {
-        waterParticles = GetComponent<ParticleSystem>();
+        sprayParticles = GetComponent<ParticleSystem>();
     }
 
     // Unity calls this when drops from this particle system hit a collider.
@@ -25,7 +25,7 @@ public class WaterCleaner : MonoBehaviour
         if (surface == null)
             return;
 
-        int count = waterParticles.GetCollisionEvents(other, hits);
+        int count = sprayParticles.GetCollisionEvents(other, hits);
         for (int i = 0; i < count; i++)
         {
             // A particle hit gives the point and the surface direction, but not the
@@ -35,7 +35,7 @@ public class WaterCleaner : MonoBehaviour
             if (Physics.Raycast(point + normal * 0.05f, -normal, out RaycastHit rayHit, 0.1f)
                 && rayHit.collider.gameObject == other)
             {
-                surface.Clean(rayHit.textureCoord, cleaningTool);
+                surface.Spray(rayHit.textureCoord, cleaningTool);
             }
         }
     }
