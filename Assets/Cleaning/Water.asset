@@ -20,3 +20,6 @@ MonoBehaviour:
   soapAdded: 0
   soapSoakTime: 30
   soapRinse: 0.05
+  wetnessAdded: 0.04
+  drying: 0
+  polish: 0

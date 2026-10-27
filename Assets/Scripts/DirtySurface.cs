@@ -33,6 +33,16 @@ public class DirtySurface : MonoBehaviour
     // How wet and shiny the foam looks (0 = matte, 1 = mirror).
     public float foamSmoothness = 0.6f;
 
+    [Header("Water and shine")]
+    // How shiny clean paint is before and after it is polished with the towel (0 = matte, 1 = mirror).
+    public float dullSmoothness = 0.6f;
+    public float polishedSmoothness = 0.95f;
+    // Wet paint looks a bit darker and very glossy.
+    public float wetSmoothness = 0.9f;
+    public float wetDarkening = 0.15f;
+    // How long water takes to dry on its own, in seconds (the towel dries it right away).
+    public float dryingTime = 120f;
+
     int width;
     int height;
     Color paintColor;
@@ -53,6 +63,9 @@ public class DirtySurface : MonoBehaviour
     bool[] loosened;
     // Random value per pixel so foam edges look uneven instead of perfectly round.
     float[] foamVariation;
+    // How wet the paint is (0 = dry, 1 = soaking), and how polished (0 = dull, 1 = fully shiny).
+    float[] wetness;
+    float[] shine;
     Color32[] pixels;
     Texture2D surfaceTexture;
     // Where the foam is (0..255 per pixel). The material uses it to show the bubble pattern only there.
@@ -248,6 +261,8 @@ public class DirtySurface : MonoBehaviour
         soapReadyTime = new float[count];
         loosened = new bool[count];
         foamVariation = new float[count];
+        wetness = new float[count];
+        shine = new float[count];
         foamMaskPixels = new byte[count];
         pixels = new Color32[count];
         float seed = Random.value * 100f;
@@ -293,9 +308,10 @@ public class DirtySurface : MonoBehaviour
               + Mathf.PerlinNoise(p.x + 51f, p.z + seed)) / 3f * 1.4f - 0.2f;
     }
 
-    // Applies a tool (water, soap...) in a round spot around the point where it hit the car.
+    // Applies a tool (water, soap, sponge...) in a round spot around the point where it hit the car.
     // uv = the hit's place on the texture, point/normal = the hit in the world.
-    public void Spray(Vector2 uv, Vector3 point, Vector3 normal, CleaningTool tool)
+    // strength scales the tool (1 = one full hit; hand tools pass less for a short rub).
+    public void Spray(Vector2 uv, Vector3 point, Vector3 normal, CleaningTool tool, float strength = 1f)
     {
         int centerX = (int)(uv.x * width);
         int centerY = (int)(uv.y * height);
@@ -318,7 +334,7 @@ public class DirtySurface : MonoBehaviour
                     continue;
 
                 // Strongest in the middle of the spot, weaker at the edge.
-                float amount = 1f - distance;
+                float amount = (1f - distance) * strength;
 
                 // Soap that has sat long enough makes the dirt easier to wash off.
                 if (soap[i] >= MinSoap && Time.time >= soapReadyTime[i])
@@ -342,6 +358,11 @@ public class DirtySurface : MonoBehaviour
                 if (tool.soapRinse > 0f && soap[i] < MinSoap)
                     soap[i] = 0f; // rinse away the last invisible bit too
 
+                // Water makes the paint wet; the towel dries it and polishes clean, dry paint.
+                wetness[i] = Mathf.Clamp01(wetness[i] + (tool.wetnessAdded - tool.drying) * amount);
+                if (tool.polish > 0f && wetness[i] < 0.1f && IsClean(i))
+                    shine[i] = Mathf.Min(1f, shine[i] + tool.polish * amount);
+
                 UpdatePixel(i);
             }
         }
@@ -356,6 +377,12 @@ public class DirtySurface : MonoBehaviour
             else if (tool.soapRinse > 0f)
                 foamClumps.SoapChanged();
         }
+    }
+
+    // No mud, no grime and no soap left on this pixel.
+    bool IsClean(int i)
+    {
+        return looseDirt[i] < 0.05f && grime[i] < 0.05f && soap[i] < MinSoap;
     }
 
     // How far the soap at a point has soaked: 0 = just sprayed, 1 = ready to rinse.
@@ -374,29 +401,33 @@ public class DirtySurface : MonoBehaviour
         return Mathf.Clamp01((Time.time - soapStartTime[i]) / soakTime);
     }
 
-    // Twice a second, recolor the soapy pixels so the foam slowly turns brown while it soaks.
-    // Only pixels still soaking (or that just finished) are recolored, so fully soaked foam costs nothing.
+    // Twice a second, recolor the soapy pixels so the foam slowly turns brown while it soaks,
+    // and let wet paint dry a little.
+    // Only pixels still soaking (or that just finished) or still wet are recolored, so the rest costs nothing.
     void Update()
     {
         if (Time.time < nextSoakRefresh)
             return;
         nextSoakRefresh = Time.time + 0.5f;
 
+        float driedPerRefresh = 0.5f / dryingTime;
         bool anySoaking = false;
+        bool anyWet = false;
         for (int i = 0; i < soap.Length; i++)
         {
-            if (soap[i] > 0f && Time.time - 0.5f < soapReadyTime[i])
-            {
+            bool soaking = soap[i] > 0f && Time.time - 0.5f < soapReadyTime[i];
+            bool wet = wetness[i] > 0f;
+            if (wet)
+                wetness[i] = Mathf.Max(0f, wetness[i] - driedPerRefresh);
+            if (soaking || wet)
                 UpdatePixel(i);
-                anySoaking = true;
-            }
+            anySoaking |= soaking;
+            anyWet |= wet;
         }
-        if (anySoaking)
-        {
+        if (anySoaking || anyWet)
             textureChanged = true;
-            if (foamClumps != null)
-                foamClumps.SoapChanged(); // the 3D mounds change color too
-        }
+        if (anySoaking && foamClumps != null)
+            foamClumps.SoapChanged(); // the 3D mounds change color too
     }
 
     // Send the new pixels to the GPU once per frame, only if something was cleaned.
@@ -412,15 +443,20 @@ public class DirtySurface : MonoBehaviour
         }
     }
 
-    // Works out the color of one pixel: paint, then grime, then mud, then foam on top.
-    // Alpha is smoothness: clean paint is shiny, dirt is matte, foam is wet and a bit shiny.
+    // Works out the color of one pixel: paint, then grime, then mud, then water, then foam on top.
+    // Alpha is smoothness: clean paint is shiny (more after polishing), wet paint is glossy,
+    // dirt is matte, foam is wet and a bit shiny.
     void UpdatePixel(int i)
     {
         Color paint = paintPixels != null ? paintPixels[i] * paintColor : paintColor;
         Color color = Color.Lerp(paint, grimeColor, grime[i] * grimeStrength);
         Color mud = Color.Lerp(lightMudColor, darkMudColor, mudShade[i]);
         color = Color.Lerp(color, mud, looseDirt[i]);
-        float smoothness = Mathf.Lerp(0.85f, 0.1f, Mathf.Max(looseDirt[i], grime[i] * grimeStrength));
+        color *= 1f - wetDarkening * wetness[i];
+
+        float paintSmoothness = Mathf.Lerp(dullSmoothness, polishedSmoothness, shine[i]);
+        paintSmoothness = Mathf.Lerp(paintSmoothness, Mathf.Max(paintSmoothness, wetSmoothness), wetness[i]);
+        float smoothness = Mathf.Lerp(paintSmoothness, 0.1f, Mathf.Max(looseDirt[i], grime[i] * grimeStrength));
 
         // Foam: uneven edges (foamVariation), thin foam still lets a little paint show through.
         float foam = Mathf.Clamp01(soap[i] * 2.5f - foamVariation[i] * 0.6f);
