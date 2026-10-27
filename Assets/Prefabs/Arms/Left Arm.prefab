@@ -76,7 +76,7 @@ MonoBehaviour:
   intermediateBend: 85
   distalBend: 55
   thumbBend: 35
-  relaxed: 0.6
+  relaxed: 0.1
   fingerSpeed: 15
 --- !u!114 &6740864526789748219
 MonoBehaviour:

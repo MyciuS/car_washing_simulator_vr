@@ -22,10 +22,9 @@ public class ControllerHand : MonoBehaviour
     public float distalBend = 55f;
     public float thumbBend = 35f;
 
-    // How much the fingers are bent when no button is pressed (0 = flat hand, 1 = fist).
-    // The real fingers are wrapped around the controller, so the hand stays half closed.
+    // How much the fingers are bent when no button is pressed (0 = the model's own relaxed hand, 1 = fist).
     [Range(0f, 1f)]
-    public float relaxed = 0.6f;
+    public float relaxed = 0.1f;
 
     // How fast the fingers follow the buttons.
     public float fingerSpeed = 15f;
