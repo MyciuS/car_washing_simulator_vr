@@ -19,14 +19,21 @@ public class ArmIK : MonoBehaviour
     // Elbow to shoulder (meters). The forearm length is read from the model.
     public float upperArmLength = 0.30f;
 
-    // The wrist never bends more than this (degrees), so it can't look broken.
-    public float maxWristBend = 55f;
+    // How far the wrist can bend (degrees), so it can't look broken.
+    // Real wrists bend a lot up and down (towards the palm or the back of the hand),
+    // but only a little to the sides.
+    public float maxWristBendUpDown = 25f;
+    public float maxWristBendSideways = 12f;
+
+    // How much the elbows point out to the sides (0 = straight down).
+    public float elbowsOut = 0.25f;
 
     // How fast the body turns to follow the head.
     public float bodyTurnSpeed = 4f;
 
     Transform forearm;
     Transform upperArm;
+    Transform wrist;
     bool isLeft;
     float forearmLength;
 
@@ -46,10 +53,12 @@ public class ArmIK : MonoBehaviour
                 forearm = bone;
             else if (bone.name.EndsWith("_UpperArm"))
                 upperArm = bone;
+            else if (bone.name.EndsWith("_Wrist"))
+                wrist = bone;
         }
-        if (forearm == null || upperArm == null)
+        if (forearm == null || upperArm == null || wrist == null)
         {
-            Debug.LogWarning("ArmIK: no *_Forearm / *_UpperArm bones under " + name, this);
+            Debug.LogWarning("ArmIK: no *_Forearm / *_UpperArm / *_Wrist bones under " + name, this);
             enabled = false;
             return;
         }
@@ -85,10 +94,9 @@ public class ArmIK : MonoBehaviour
         Vector3 outward = isLeft ? -bodyRight : bodyRight;
 
         Vector3 shoulder = head.position + Vector3.down * shoulderDrop - bodyForward * shoulderBack + outward * shoulderWidth;
-        Vector3 wrist = forearm.position;
 
         // Two-bone IK: find the elbow so the forearm and upper arm keep their lengths.
-        Vector3 toShoulder = shoulder - wrist;
+        Vector3 toShoulder = shoulder - forearm.position;
         float a = forearmLength;
         float b = upperArmLength;
         float distance = Mathf.Clamp(toShoulder.magnitude, Mathf.Abs(a - b) + 0.01f, a + b - 0.001f);
@@ -98,14 +106,14 @@ public class ArmIK : MonoBehaviour
         float side = Mathf.Sqrt(Mathf.Max(0f, a * a - along * along));
 
         // Elbows point down, a bit out and a bit back.
-        Vector3 hint = Vector3.down + outward * 0.6f - bodyForward * 0.3f;
+        Vector3 hint = Vector3.down + outward * elbowsOut - bodyForward * 0.3f;
         Vector3 bendDirection = Vector3.ProjectOnPlane(hint, direction).normalized;
         Vector3 elbowDirection = (direction * along + bendDirection * side).normalized;
 
         // Point the forearm at the elbow, but don't bend the wrist too far.
         Quaternion forearmStart = forearm.parent.rotation * forearmRest;
         Vector3 straightAhead = forearmStart * forearmAxis;
-        elbowDirection = Vector3.RotateTowards(straightAhead, elbowDirection, maxWristBend * Mathf.Deg2Rad, 0f);
+        elbowDirection = LimitWristBend(straightAhead, elbowDirection);
         forearm.rotation = Quaternion.FromToRotation(straightAhead, elbowDirection) * forearmStart;
 
         // Point the upper arm at the shoulder.
@@ -113,6 +121,31 @@ public class ArmIK : MonoBehaviour
         Vector3 upperArmNow = upperArmStart * upperArmAxis;
         Vector3 toShoulderFromElbow = shoulder - upperArm.position;
         upperArm.rotation = Quaternion.FromToRotation(upperArmNow, toShoulderFromElbow) * upperArmStart;
+    }
+
+    // Turns "wanted" (direction from the wrist to the elbow) so the wrist stays within its limits.
+    // "straight" is the direction of a forearm with an unbent wrist.
+    Vector3 LimitWristBend(Vector3 straight, Vector3 wanted)
+    {
+        // The back of the hand faces the wrist bone's up axis; the thumb side is the third axis.
+        Vector3 backOfHand = Vector3.ProjectOnPlane(wrist.up, straight).normalized;
+        Vector3 thumbSide = Vector3.Cross(straight, backOfHand);
+
+        float upDown = Mathf.Atan2(Vector3.Dot(wanted, backOfHand), Vector3.Dot(wanted, straight)) * Mathf.Rad2Deg;
+        float sideways = Mathf.Asin(Mathf.Clamp(Vector3.Dot(wanted, thumbSide), -1f, 1f)) * Mathf.Rad2Deg;
+
+        // Too far? Shrink both parts together, so the wrist still bends the same way, just less.
+        float howFar = Mathf.Sqrt(Mathf.Pow(upDown / maxWristBendUpDown, 2f) + Mathf.Pow(sideways / maxWristBendSideways, 2f));
+        if (howFar > 1f)
+        {
+            upDown /= howFar;
+            sideways /= howFar;
+        }
+        upDown *= Mathf.Deg2Rad;
+        sideways *= Mathf.Deg2Rad;
+
+        Vector3 inBendPlane = straight * Mathf.Cos(upDown) + backOfHand * Mathf.Sin(upDown);
+        return inBendPlane * Mathf.Cos(sideways) + thumbSide * Mathf.Sin(sideways);
     }
 
     // Where the head faces, flat on the ground. Still works when looking straight down or up.
