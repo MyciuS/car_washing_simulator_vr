@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3616964575666956941}
   - component: {fileID: 286347511425088317}
+  - component: {fileID: 6740864526789748219}
   m_Layer: 0
   m_Name: Left Arm
   m_TagString: Untagged
@@ -77,6 +78,25 @@ MonoBehaviour:
   thumbBend: 35
   relaxed: 0.35
   fingerSpeed: 15
+--- !u!114 &6740864526789748219
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 533602966770963836}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04cdf70414687d14e9717509074389a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArmIK
+  head: {fileID: 0}
+  shoulderWidth: 0.18
+  shoulderDrop: 0.22
+  shoulderBack: 0.06
+  upperArmLength: 0.3
+  maxWristBend: 55
+  bodyTurnSpeed: 4
 --- !u!1 &5048446399281737102
 GameObject:
   m_ObjectHideFlags: 0
@@ -160,6 +180,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 490f2273f0127004d833edc700d0f1e1, type: 3}
       propertyPath: m_Name
       value: Left Hand Model
+      objectReference: {fileID: 0}
+    - target: {fileID: 2338603169372130976, guid: 490f2273f0127004d833edc700d0f1e1, type: 3}
+      propertyPath: m_UpdateWhenOffscreen
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
