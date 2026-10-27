@@ -6,6 +6,7 @@ using UnityEngine;
 //   - grime: stubborn film that water alone can't remove
 // Soap can be sprayed on top. Once it has soaked long enough, the dirt under it
 // is "loosened" and water removes it (grime too) much faster (see CleaningTool).
+// Thick soap slowly runs down the car and drips off the bottom edges onto the ground (WetGround).
 // The paint comes from the object's material (Base Map texture and Base Color).
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class DirtySurface : MonoBehaviour
@@ -43,6 +44,12 @@ public class DirtySurface : MonoBehaviour
     // How long water takes to dry on its own, in seconds (the towel dries it right away).
     public float dryingTime = 120f;
 
+    [Header("Soap running down")]
+    // Thick soap slowly slides down the car. This much soap always sticks where it is.
+    public float soapThatSticks = 0.12f;
+    // How much of the soap above that moves one pixel down per step (4 steps a second).
+    public float soapRunSpeed = 0.25f;
+
     int width;
     int height;
     Color paintColor;
@@ -66,6 +73,15 @@ public class DirtySurface : MonoBehaviour
     // How wet the paint is (0 = dry, 1 = soaking), and how polished (0 = dull, 1 = fully shiny).
     float[] wetness;
     float[] shine;
+    // For every pixel, the neighbour pixel just below it on the car, where soap runs to (-1 = none).
+    int[] downhill;
+    // Pixels at a bottom edge: soap that reaches them drips off onto the ground.
+    bool[] dripEdge;
+    float[] soapAfterRunning;
+    System.Collections.Generic.List<int> soapMoved = new System.Collections.Generic.List<int>();
+    float nextSoapRun;
+    // Middle of the whole car, so drips can fall a little outside the car instead of under it.
+    Vector3 carCenter;
     Color32[] pixels;
     Texture2D surfaceTexture;
     // Where the foam is (0..255 per pixel). The material uses it to show the bubble pattern only there.
@@ -89,6 +105,7 @@ public class DirtySurface : MonoBehaviour
         if (paintTexture != null)
             paintPixels = ReadTexture(paintTexture);
         FindPixelPositions(mesh);
+        FindDownhillPixels();
         MakeStartingDirt(dirtMask != null ? ReadTexture(dirtMask) : null);
 
         // A texture that shows paint + dirt, put on this object's material.
@@ -214,6 +231,108 @@ public class DirtySurface : MonoBehaviour
                 }
             }
         }
+    }
+
+    // For every pixel, finds the neighbouring pixel that is lowest on the car: that is where soap runs to.
+    // Only neighbours that are really next to it on the car count (not across a seam in the texture).
+    // A pixel on a slope with nothing lower next to it is a bottom edge, where soap drips off.
+    void FindDownhillPixels()
+    {
+        int count = width * height;
+        downhill = new int[count];
+        dripEdge = new bool[count];
+        soapAfterRunning = new float[count];
+        float pixelSize = 1f / pixelsPerMeter;
+        const float steep = 0.3f; // flatter than this (about 17 degrees) and soap stays put
+        Bounds car = GetComponent<Renderer>().bounds;
+        foreach (Renderer r in transform.root.GetComponentsInChildren<Renderer>())
+            car.Encapsulate(r.bounds);
+        carCenter = car.center;
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int i = y * width + x;
+                downhill[i] = -1;
+                if (!onSurface[i])
+                    continue;
+                float steepest = steep;
+                bool hasHigherNeighbour = false;
+                for (int ny = y - 1; ny <= y + 1; ny++)
+                {
+                    for (int nx = x - 1; nx <= x + 1; nx++)
+                    {
+                        if (nx < 0 || ny < 0 || nx >= width || ny >= height || (nx == x && ny == y))
+                            continue;
+                        int n = ny * width + nx;
+                        if (!onSurface[n])
+                            continue;
+                        Vector3 step = pixelPosition[n] - pixelPosition[i];
+                        float distance = step.magnitude;
+                        if (distance < 1e-5f || distance > pixelSize * 3f)
+                            continue;
+                        float slope = -step.y / distance; // how much it goes down per meter
+                        if (slope > steepest)
+                        {
+                            steepest = slope;
+                            downhill[i] = n;
+                        }
+                        if (slope < -steep)
+                            hasHigherNeighbour = true;
+                    }
+                }
+                dripEdge[i] = downhill[i] < 0 && hasHigherNeighbour;
+            }
+        }
+    }
+
+    // Thick soap slides one pixel down the car. At a bottom edge it drips off onto the ground.
+    void RunSoapDown()
+    {
+        System.Array.Copy(soap, soapAfterRunning, soap.Length);
+        soapMoved.Clear();
+        for (int i = 0; i < soap.Length; i++)
+        {
+            float extra = soap[i] - soapThatSticks;
+            if (extra <= 0f)
+                continue;
+            float running = extra * soapRunSpeed;
+            int below = downhill[i];
+            if (below >= 0)
+            {
+                // Soap arriving on a clean spot keeps soaking from where it started.
+                if (soapAfterRunning[below] <= 0f)
+                {
+                    soapStartTime[below] = soapStartTime[i];
+                    soapReadyTime[below] = soapReadyTime[i];
+                }
+                soapAfterRunning[below] = Mathf.Min(1f, soapAfterRunning[below] + running);
+                soapAfterRunning[i] -= running;
+                soapMoved.Add(i);
+                soapMoved.Add(below);
+            }
+            else if (dripEdge[i])
+            {
+                soapAfterRunning[i] -= running;
+                soapMoved.Add(i);
+                // It drips onto the floor just outside the car.
+                Vector3 outward = pixelPosition[i] - carCenter;
+                outward.y = 0f;
+                WetGround.Splash(pixelPosition[i] + outward.normalized * 0.12f, 0.1f, running * 0.3f, running * 0.5f);
+            }
+        }
+        if (soapMoved.Count == 0)
+            return;
+
+        float[] before = soap;
+        soap = soapAfterRunning;
+        soapAfterRunning = before;
+        foreach (int i in soapMoved)
+            UpdatePixel(i);
+        textureChanged = true;
+        if (foamClumps != null)
+            foamClumps.SoapChanged();
     }
 
     // Reads any texture at this surface's size (works even if the texture isn't marked Read/Write).
@@ -406,6 +525,12 @@ public class DirtySurface : MonoBehaviour
     // Only pixels still soaking (or that just finished) or still wet are recolored, so the rest costs nothing.
     void Update()
     {
+        if (Time.time >= nextSoapRun)
+        {
+            nextSoapRun = Time.time + 0.25f;
+            RunSoapDown();
+        }
+
         if (Time.time < nextSoakRefresh)
             return;
         nextSoakRefresh = Time.time + 0.5f;

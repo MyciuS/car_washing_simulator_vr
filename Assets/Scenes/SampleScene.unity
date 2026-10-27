@@ -660,6 +660,8 @@ MonoBehaviour:
   wetSmoothness: 0.9
   wetDarkening: 0.15
   dryingTime: 120
+  soapThatSticks: 0.12
+  soapRunSpeed: 0.25
 --- !u!23 &81702584
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -3602,6 +3604,8 @@ MonoBehaviour:
   wetSmoothness: 0.9
   wetDarkening: 0.15
   dryingTime: 120
+  soapThatSticks: 0.12
+  soapRunSpeed: 0.25
 --- !u!23 &718013015
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -3762,6 +3766,8 @@ MonoBehaviour:
   wetSmoothness: 0.9
   wetDarkening: 0.15
   dryingTime: 120
+  soapThatSticks: 0.12
+  soapRunSpeed: 0.25
 --- !u!23 &765398505
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4086,6 +4092,8 @@ MonoBehaviour:
   wetSmoothness: 0.9
   wetDarkening: 0.15
   dryingTime: 120
+  soapThatSticks: 0.12
+  soapRunSpeed: 0.25
 --- !u!23 &871364720
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -8879,6 +8887,8 @@ MonoBehaviour:
   wetSmoothness: 0.9
   wetDarkening: 0.15
   dryingTime: 120
+  soapThatSticks: 0.12
+  soapRunSpeed: 0.25
 --- !u!64 &1186536404
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -15518,6 +15528,8 @@ MonoBehaviour:
   wetSmoothness: 0.9
   wetDarkening: 0.15
   dryingTime: 120
+  soapThatSticks: 0.12
+  soapRunSpeed: 0.25
 --- !u!23 &1528210568
 MeshRenderer:
   m_ObjectHideFlags: 0
