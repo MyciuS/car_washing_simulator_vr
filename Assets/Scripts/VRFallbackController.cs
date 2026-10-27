@@ -12,13 +12,19 @@ public class VRFallbackController : MonoBehaviour
     public Transform cameraTransform;
 
     private float rotationX = 0f;
-    private float rotationY = 0f;
     private bool isVRActive = false;
+
+    // True when a headset is running. OpenXR can report this a few frames late,
+    // so it is checked every frame, and the tracked head device is checked too.
+    static bool IsHeadsetActive()
+    {
+        return XRSettings.isDeviceActive || InputDevices.GetDeviceAtXRNode(XRNode.Head).isValid;
+    }
 
     void Start()
     {
         // Disable non-VR controls if a VR head-mounted display is active
-        if (XRSettings.isDeviceActive)
+        if (IsHeadsetActive())
         {
             isVRActive = true;
             return;
@@ -33,7 +39,6 @@ public class VRFallbackController : MonoBehaviour
         if (cameraTransform != null)
         {
             rotationX = cameraTransform.localEulerAngles.x;
-            rotationY = transform.eulerAngles.y;
         }
 
         Cursor.lockState = CursorLockMode.Locked;
@@ -43,6 +48,15 @@ public class VRFallbackController : MonoBehaviour
     void Update()
     {
         if (isVRActive) return;
+
+        // The headset came up after Start: hand control back to VR for good.
+        if (IsHeadsetActive())
+        {
+            isVRActive = true;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            return;
+        }
 
         HandleRotation();
         HandleMovement();
@@ -67,10 +81,9 @@ public class VRFallbackController : MonoBehaviour
         rotationX -= mouseDelta.y;
         rotationX = Mathf.Clamp(rotationX, -80f, 80f);
 
-        rotationY += mouseDelta.x;
-
-        // Rotate character body horizontally, and camera vertically
-        transform.rotation = Quaternion.Euler(0f, rotationY, 0f);
+        // Rotate character body horizontally, and camera vertically.
+        // Turn by the mouse movement only, so snap turns from the XR rig are never undone.
+        transform.Rotate(0f, mouseDelta.x, 0f, Space.World);
         cameraTransform.localRotation = Quaternion.Euler(rotationX, 0f, 0f);
     }
 
