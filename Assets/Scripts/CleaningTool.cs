@@ -1,9 +1,11 @@
 using UnityEngine;
 
-// Describes what a spray (or later a brush) does to a DirtySurface.
+// Describes what a spray or a hand tool (sponge, brush, towel) does to a DirtySurface.
 // Make one asset per method: Assets > Create > Car Wash > Cleaning Tool.
-//   - Water: removes loose mud and rinses soap off. On soaked spots it also removes grime.
+//   - Water: removes loose mud, rinses soap off and makes the paint wet. On soaked spots it also removes grime.
 //   - Soap: leaves soap on the car. After it has soaked for a while, water cleans better there.
+//   - Sponge / brush: scrub mud and grime off, and leave soap if they were dipped in the bucket.
+//   - Towel: dries the paint and polishes clean, dry paint until it shines.
 [CreateAssetMenu(menuName = "Car Wash/Cleaning Tool")]
 public class CleaningTool : ScriptableObject
 {
@@ -27,4 +29,12 @@ public class CleaningTool : ScriptableObject
     public float soapSoakTime = 30f;
     // How much soap one hit washes off (water).
     public float soapRinse = 0f;
+
+    [Header("Water on the paint and shine")]
+    // How wet one hit makes the paint (water).
+    public float wetnessAdded = 0f;
+    // How much water one hit wipes off (towel).
+    public float drying = 0f;
+    // How much shine one hit adds to paint that is clean and dry (towel).
+    public float polish = 0f;
 }
