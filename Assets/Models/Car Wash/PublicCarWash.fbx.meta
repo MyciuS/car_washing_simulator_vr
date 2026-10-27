@@ -7,6 +7,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: WashAsphalt
+    second: {fileID: 2100000, guid: 62a0a0254ba5bbf4ebe9f6b4ca570a6e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: WashBlack
     second: {fileID: 2100000, guid: 74fe221dbe2db1c4bbc7215e4868fe5b, type: 2}
   - first:
@@ -44,6 +49,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: WashLight
     second: {fileID: 2100000, guid: 396fc3b82fe5cfe40a1820644a3dda66, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WashPaint
+    second: {fileID: 2100000, guid: 205abaa9a3242b94fb4178732c7ccf9c, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
