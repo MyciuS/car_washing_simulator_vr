@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d354a51f6335acd4fba2875171f5dfa0, type: 3}
   m_Name: Brush Soapy
   m_EditorClassIdentifier: Assembly-CSharp::CleaningTool
-  radius: 0.05
+  radius: 0.08
   looseDirtRemoval: 0.25
   grimeRemoval: 0.3
   soakedLooseDirtRemoval: 0.3
   soakedGrimeRemoval: 0.35
-  soapAdded: 0.05
+  soapAdded: 0.15
   soapSoakTime: 30
   soapRinse: 0
   wetnessAdded: 0.03

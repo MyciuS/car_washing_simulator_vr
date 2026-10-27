@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d354a51f6335acd4fba2875171f5dfa0, type: 3}
   m_Name: Towel
   m_EditorClassIdentifier: Assembly-CSharp::CleaningTool
-  radius: 0.08
+  radius: 0.13
   looseDirtRemoval: 0.01
   grimeRemoval: 0
   soakedLooseDirtRemoval: 0.02

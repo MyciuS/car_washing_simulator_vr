@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d354a51f6335acd4fba2875171f5dfa0, type: 3}
   m_Name: Sponge Soapy
   m_EditorClassIdentifier: Assembly-CSharp::CleaningTool
-  radius: 0.07
+  radius: 0.13
   looseDirtRemoval: 0.15
   grimeRemoval: 0.12
   soakedLooseDirtRemoval: 0.2
   soakedGrimeRemoval: 0.15
-  soapAdded: 0.08
+  soapAdded: 0.3
   soapSoakTime: 30
   soapRinse: 0
   wetnessAdded: 0.05

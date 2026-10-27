@@ -23,11 +23,11 @@ public class RubCleaner : MonoBehaviour
 
     [Header("Soap (tools that use soap)")]
     // How much of a full soap load is used up per meter of rubbing.
-    public float soapPerMeter = 0.15f;
+    public float soapPerMeter = 0.08f;
 
     [Header("Getting dirty")]
     // How dirty the tool gets per meter of rubbing (1 = fully dirty).
-    public float dirtPerMeter = 0.08f;
+    public float dirtPerMeter = 0.01f;
     // How much worse a fully dirty tool cleans (0.5 = half as well).
     public float dirtyPenalty = 0.5f;
 

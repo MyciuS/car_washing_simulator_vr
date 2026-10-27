@@ -306,8 +306,8 @@ MonoBehaviour:
   withSoap: {fileID: 11400000, guid: b36d087bdf9951c49b992771a9073cce, type: 2}
   withoutSoap: {fileID: 11400000, guid: e68661294e4b1aa448e44f6c1206d529, type: 2}
   metersPerUse: 0.05
-  soapPerMeter: 0.3
-  dirtPerMeter: 0.1
+  soapPerMeter: 0.15
+  dirtPerMeter: 0.012
   dirtyPenalty: 0.5
   toolRenderer: {fileID: 250812779731996954}
   dirtyMaterial: 1
