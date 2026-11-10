@@ -2,7 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Walks an NPC along a route (NpcRoute), around and around. It stays on the ground (sidewalks
-// are a bit higher than the road) and waits when the player or another NPC is right in front of it.
+// are a bit higher than the road) and waits when the player or another NPC is right in front of it,
+// and walks around them if they stay there.
 // Other scripts (NpcCustomer) can make it stand still, face something, or walk somewhere else.
 // Put this on the NPC. Put the NPC on the "Ignore Raycast" layer, so it doesn't find itself
 // when it looks for the ground.
@@ -24,6 +25,9 @@ public class NpcWalker : MonoBehaviour
     bool goingSomewhere;
     Vector3 destination;
     Vector3? faceTowards;
+    // How long someone has been in the way, and until when we are walking around them.
+    float blockedTime;
+    float goAroundUntil;
 
     // True once a GoTo walk has reached its destination.
     public bool HasArrived { get; private set; }
@@ -110,9 +114,33 @@ public class NpcWalker : MonoBehaviour
             return;
         }
 
-        TurnTowards(toTarget);
-        // Walk only roughly in the right direction (no walking sideways), and not into anyone.
-        if (Vector3.Angle(transform.forward, toTarget) < 45f && !SomeoneInTheWay())
+        // Someone has been in the way for a while: walk around them, a bit to the right.
+        Vector3 heading = Time.time < goAroundUntil ? Quaternion.Euler(0f, 70f, 0f) * toTarget : toTarget;
+        TurnTowards(heading);
+
+        bool blocked = SomeoneInTheWay();
+        if (blocked)
+        {
+            // Someone is standing where we want to stop: close enough.
+            if (goingSomewhere && toTarget.magnitude < 1.5f)
+            {
+                HasArrived = true;
+                return;
+            }
+            blockedTime += Time.deltaTime;
+            if (blockedTime > 1f)
+            {
+                goAroundUntil = Time.time + 1.2f;
+                blockedTime = 0f;
+            }
+        }
+        else
+        {
+            blockedTime = 0f;
+        }
+
+        // Walk only roughly in the direction we face (no walking sideways), and not into anyone.
+        if (Vector3.Angle(transform.forward, heading) < 45f && !blocked)
         {
             Vector3 step = transform.forward * Mathf.Min(walkSpeed * Time.deltaTime, toTarget.magnitude);
             transform.position = OnGround(transform.position + step);

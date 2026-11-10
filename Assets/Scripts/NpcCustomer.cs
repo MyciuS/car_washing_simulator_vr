@@ -6,7 +6,8 @@ using UnityEngine.InputSystem;
 // Walk up to them and look at them: they offer you money to wash their car. Press the talk
 // button (A on the right controller, E on the keyboard) to say yes. They then walk to their car
 // and wait next to it. Once the car is clean enough (and rinsed), they pay you when you come
-// back to them, and go back to their walk.
+// back to them, and go back to their walk. Wash it quickly (within bonusTimeMinutes of game
+// time) and they pay a bonus on top.
 // Put this on the NPC, next to NpcWalker.
 [RequireComponent(typeof(NpcWalker))]
 public class NpcCustomer : MonoBehaviour
@@ -20,6 +21,14 @@ public class NpcCustomer : MonoBehaviour
     // How clean the car has to be before the NPC pays (0.85 = 85%).
     [Range(0f, 1f)]
     public float cleanEnough = 0.85f;
+
+    [Header("Speed bonus")]
+    // Wash the car within this many game minutes after saying yes and the NPC pays extra
+    // (150 game minutes = 2.5 real minutes, see GameClock).
+    public float bonusTimeMinutes = 150f;
+    // The extra money, as a share of the price (0.5 = half the price on top).
+    [Range(0f, 1f)]
+    public float bonusShare = 0.5f;
 
     // Where the money goes. Found automatically if left empty.
     public PlayerStats playerStats;
@@ -44,6 +53,8 @@ public class NpcCustomer : MonoBehaviour
     float nextCleanCheck;
     float cleanliness;
     bool carWashed;
+    // When the player said yes, in game minutes.
+    float jobStartMinutes;
 
     void Awake()
     {
@@ -97,8 +108,10 @@ public class NpcCustomer : MonoBehaviour
                 if (talkPressed)
                 {
                     state = State.GoingToCar;
+                    jobStartMinutes = GameMinutes();
+                    nextCleanCheck = 0f;
                     walker.GoTo(car.ownerWaitSpot.position);
-                    Say("Great! It's parked over there.\nI'll wait next to it.");
+                    Say("Great! It's parked over there.\nI'll wait next to it.\nBe quick and I'll add $" + Bonus() + "!");
                 }
                 else if (PlayerDistance() > talkDistance + 1.5f)
                 {
@@ -152,22 +165,48 @@ public class NpcCustomer : MonoBehaviour
 
     void Pay()
     {
-        playerStats.AddMoney(price);
+        bool quick = BonusMinutesLeft() > 0f;
+        playerStats.AddMoney(quick ? price + Bonus() : price);
         carWashed = true;
         car.HideLabel();
         state = State.Paid;
         paidTime = Time.time;
-        Say("Wow, it looks brand new!\nHere's your $" + price + ". Thanks!");
+        if (quick)
+            Say("Wow, that was fast!\nHere's $" + price + " + $" + Bonus() + " bonus. Thanks!");
+        else
+            Say("Wow, it looks brand new!\nHere's your $" + price + ". Thanks!");
     }
 
-    // Twice a second, check how clean the car is and show it above the car.
+    // The extra money for a quick wash.
+    int Bonus()
+    {
+        return Mathf.RoundToInt(price * bonusShare);
+    }
+
+    // Game minutes left to earn the bonus (0 or less = too late).
+    float BonusMinutesLeft()
+    {
+        return bonusTimeMinutes - (GameMinutes() - jobStartMinutes);
+    }
+
+    // The game time in minutes (see GameClock), or real seconds if there is no game clock.
+    static float GameMinutes()
+    {
+        return GameClock.Instance != null ? GameClock.Instance.TotalMinutes : Time.time;
+    }
+
+    // Twice a second, check how clean the car is and show it above the car, with the time left for the bonus.
     void UpdateCarLabel()
     {
         if (Time.time < nextCleanCheck)
             return;
         nextCleanCheck = Time.time + 0.5f;
         cleanliness = car.GetCleanliness();
-        car.ShowLabel("Wash for $" + price + "\n" + Mathf.RoundToInt(cleanliness * 100f) + "% clean");
+        float left = BonusMinutesLeft();
+        string bonusLine = left > 0f
+            ? "<color=#7CFC7C>Bonus +$" + Bonus() + ": " + GameClock.Duration(left) + " left</color>"
+            : "<color=#BBBBBB>No bonus, too slow</color>";
+        car.ShowLabel("Wash for $" + price + "\n" + bonusLine + "\n" + Mathf.RoundToInt(cleanliness * 100f) + "% clean");
     }
 
     // The player is near, and the NPC is roughly in front of them (they are looking this way).
