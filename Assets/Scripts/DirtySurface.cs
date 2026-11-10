@@ -80,6 +80,8 @@ public class DirtySurface : MonoBehaviour
     float[] soapAfterRunning;
     System.Collections.Generic.List<int> soapMoved = new System.Collections.Generic.List<int>();
     float nextSoapRun;
+    // False while no soap can run (none sprayed yet, or it has all settled), so the check is skipped.
+    bool soapMayRun;
     // Middle of the whole car, so drips can fall a little outside the car instead of under it.
     Vector3 carCenter;
     Color32[] pixels;
@@ -290,6 +292,8 @@ public class DirtySurface : MonoBehaviour
     // Thick soap slides one pixel down the car. At a bottom edge it drips off onto the ground.
     void RunSoapDown()
     {
+        if (!soapMayRun)
+            return;
         System.Array.Copy(soap, soapAfterRunning, soap.Length);
         soapMoved.Clear();
         for (int i = 0; i < soap.Length; i++)
@@ -323,7 +327,10 @@ public class DirtySurface : MonoBehaviour
             }
         }
         if (soapMoved.Count == 0)
+        {
+            soapMayRun = false; // everything has settled until more soap comes
             return;
+        }
 
         float[] before = soap;
         soap = soapAfterRunning;
@@ -472,6 +479,7 @@ public class DirtySurface : MonoBehaviour
                         soapReadyTime[i] = Time.time + tool.soapSoakTime;
                     }
                     soap[i] = Mathf.Min(1f, soap[i] + tool.soapAdded * amount);
+                    soapMayRun = true;
                 }
                 soap[i] = Mathf.Max(0f, soap[i] - tool.soapRinse * amount);
                 if (tool.soapRinse > 0f && soap[i] < MinSoap)
