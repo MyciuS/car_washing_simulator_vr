@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d354a51f6335acd4fba2875171f5dfa0, type: 3}
   m_Name: Soap
   m_EditorClassIdentifier: Assembly-CSharp::CleaningTool
-  radius: 0.12
+  radius: 0.18
   looseDirtRemoval: 0
   grimeRemoval: 0
   soakedLooseDirtRemoval: 0
@@ -20,3 +20,6 @@ MonoBehaviour:
   soapAdded: 0.03
   soapSoakTime: 30
   soapRinse: 0
+  wetnessAdded: 0
+  drying: 0
+  polish: 0

@@ -325,7 +325,7 @@ public class DirtySurface : MonoBehaviour
                 // It drips onto the floor just outside the car.
                 Vector3 outward = pixelPosition[i] - carCenter;
                 outward.y = 0f;
-                WetGround.Splash(pixelPosition[i] + outward.normalized * 0.12f, 0.1f, running * 0.3f, running * 0.5f);
+                WetGround.Splash(pixelPosition[i] + outward.normalized * 0.12f, 0.15f, running * 0.3f, running * 0.5f);
             }
         }
         if (soapMoved.Count == 0)

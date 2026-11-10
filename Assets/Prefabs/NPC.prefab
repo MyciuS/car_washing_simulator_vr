@@ -390,6 +390,8 @@ MonoBehaviour:
   car: {fileID: 0}
   price: 40
   cleanEnough: 0.85
+  bonusTimeMinutes: 300
+  bonusShare: 0.5
   playerStats: {fileID: 0}
   talkButton:
     m_UseReference: 0

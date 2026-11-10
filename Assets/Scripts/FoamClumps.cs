@@ -15,14 +15,16 @@ public class FoamClumps : MonoBehaviour
     public ParticleSystem foamPrefab;
 
     // Distance between mounds, in meters (bigger = fewer mounds, faster in VR).
-    public float spacing = 0.08f;
+    // On a big surface (a whole car) the mounds are spread further apart by themselves,
+    // so that maxMounds is enough to cover all of it.
+    public float spacing = 0.1f;
     // Smallest and biggest mound width, in meters (wider than the spacing, so mounds overlap).
-    public float minSize = 0.11f;
-    public float maxSize = 0.18f;
+    public float minSize = 0.14f;
+    public float maxSize = 0.23f;
     // How tall a mound is compared to its width.
     public float height = 0.25f;
     // Most mounds this surface can have (keeps VR fast on a big car).
-    public int maxMounds = 2000;
+    public int maxMounds = 3000;
 
     // One foam mound: where it sits, which way it points, and its own random look.
     struct Mound
@@ -49,6 +51,35 @@ public class FoamClumps : MonoBehaviour
         var main = foam.main;
         main.maxParticles = maxMounds;
         particles = new ParticleSystem.Particle[maxMounds];
+        FitSpacingToSurface();
+    }
+
+    // A whole car has room for many more mounds than maxMounds at the normal spacing, and then
+    // foam would stop appearing partway. So on a big surface, space the mounds further apart
+    // (and make them wider by the same amount) until maxMounds covers the whole surface.
+    void FitSpacingToSurface()
+    {
+        MeshFilter meshFilter = GetComponent<MeshFilter>();
+        if (meshFilter == null || meshFilter.sharedMesh == null || !meshFilter.sharedMesh.isReadable)
+            return;
+        Vector3[] vertices = meshFilter.sharedMesh.vertices;
+        int[] triangles = meshFilter.sharedMesh.triangles;
+        float area = 0f;
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            Vector3 a = transform.TransformPoint(vertices[triangles[i]]);
+            Vector3 b = transform.TransformPoint(vertices[triangles[i + 1]]);
+            Vector3 c = transform.TransformPoint(vertices[triangles[i + 2]]);
+            area += Vector3.Cross(b - a, c - a).magnitude * 0.5f;
+        }
+        // About one little cube of space per (spacing x spacing) of surface; 10% extra to be safe.
+        float neededSpacing = Mathf.Sqrt(area / maxMounds) * 1.1f;
+        if (neededSpacing <= spacing)
+            return;
+        float grow = neededSpacing / spacing;
+        spacing = neededSpacing;
+        minSize *= grow;
+        maxSize *= grow;
     }
 
     // Called by DirtySurface when soap lands. uv = place on the texture, point/normal = place on the car.

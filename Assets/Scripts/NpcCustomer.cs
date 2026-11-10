@@ -24,8 +24,8 @@ public class NpcCustomer : MonoBehaviour
 
     [Header("Speed bonus")]
     // Wash the car within this many game minutes after saying yes and the NPC pays extra
-    // (150 game minutes = 2.5 real minutes, see GameClock).
-    public float bonusTimeMinutes = 150f;
+    // (300 game minutes = 5 real minutes, see GameClock).
+    public float bonusTimeMinutes = 300f;
     // The extra money, as a share of the price (0.5 = half the price on top).
     [Range(0f, 1f)]
     public float bonusShare = 0.5f;

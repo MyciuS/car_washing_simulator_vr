@@ -809,11 +809,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FoamClumps
   foamPrefab: {fileID: 7823160126158128456, guid: 324d1c5b1541df3439924936fa73ed0d, type: 3}
-  spacing: 0.08
-  minSize: 0.11
-  maxSize: 0.18
+  spacing: 0.1
+  minSize: 0.14
+  maxSize: 0.23
   height: 0.25
-  maxMounds: 2000
+  maxMounds: 3000
 --- !u!1 &106195924 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 036d67b07eb72394a9f4bc87b050760f, type: 3}
@@ -1538,7 +1538,7 @@ Transform:
   m_GameObject: {fileID: 176574175}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 4.9603033, y: 0.895, z: -8}
+  m_LocalPosition: {x: -19.4797, y: 0.895, z: 5.5320053}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2475,7 +2475,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5337215725781683531, guid: 04ba58e009513f347a70d37993b0ed22, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5.3103027
+      value: -19.1297
       objectReference: {fileID: 0}
     - target: {fileID: 5337215725781683531, guid: 04ba58e009513f347a70d37993b0ed22, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2483,7 +2483,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5337215725781683531, guid: 04ba58e009513f347a70d37993b0ed22, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -8.0199995
+      value: 5.5120063
       objectReference: {fileID: 0}
     - target: {fileID: 5337215725781683531, guid: 04ba58e009513f347a70d37993b0ed22, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3332,7 +3332,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1422135789986494629, guid: 1b583e425e458114bb8293255da45bf4, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5.5403028
+      value: -18.8997
       objectReference: {fileID: 0}
     - target: {fileID: 1422135789986494629, guid: 1b583e425e458114bb8293255da45bf4, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3340,7 +3340,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1422135789986494629, guid: 1b583e425e458114bb8293255da45bf4, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7.8999996
+      value: 5.6320057
       objectReference: {fileID: 0}
     - target: {fileID: 1422135789986494629, guid: 1b583e425e458114bb8293255da45bf4, type: 3}
       propertyPath: m_LocalRotation.w
@@ -4329,11 +4329,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FoamClumps
   foamPrefab: {fileID: 7823160126158128456, guid: 324d1c5b1541df3439924936fa73ed0d, type: 3}
-  spacing: 0.08
-  minSize: 0.11
-  maxSize: 0.18
+  spacing: 0.1
+  minSize: 0.14
+  maxSize: 0.23
   height: 0.25
-  maxMounds: 2000
+  maxMounds: 3000
 --- !u!1001 &748200774
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4548,11 +4548,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FoamClumps
   foamPrefab: {fileID: 7823160126158128456, guid: 324d1c5b1541df3439924936fa73ed0d, type: 3}
-  spacing: 0.08
-  minSize: 0.11
-  maxSize: 0.18
+  spacing: 0.1
+  minSize: 0.14
+  maxSize: 0.23
   height: 0.25
-  maxMounds: 2000
+  maxMounds: 3000
 --- !u!1 &783650528 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 036d67b07eb72394a9f4bc87b050760f, type: 3}
@@ -4607,7 +4607,7 @@ Transform:
   m_GameObject: {fileID: 791971460}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.77500004, z: 0}
+  m_LocalPosition: {x: -13.532, y: 0.77500004, z: -24.44}
   m_LocalScale: {x: 0.6, y: 0.05, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4874,11 +4874,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FoamClumps
   foamPrefab: {fileID: 7823160126158128456, guid: 324d1c5b1541df3439924936fa73ed0d, type: 3}
-  spacing: 0.08
-  minSize: 0.11
-  maxSize: 0.18
+  spacing: 0.1
+  minSize: 0.14
+  maxSize: 0.23
   height: 0.25
-  maxMounds: 2000
+  maxMounds: 3000
 --- !u!1 &879185635 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: e97ddb6f7276f2d498192b51f554ad7e, type: 3}
@@ -5714,7 +5714,7 @@ Transform:
   m_GameObject: {fileID: 986331525}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.25, y: 0.375, z: 0.95}
+  m_LocalPosition: {x: -13.282, y: 0.375, z: -23.49}
   m_LocalScale: {x: 0.05, y: 0.75, z: 0.05}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5877,7 +5877,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2677916884897582268, guid: e022f31f2356f6b4096d36884eb5fef6, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5.3103027
+      value: -19.1297
       objectReference: {fileID: 0}
     - target: {fileID: 2677916884897582268, guid: e022f31f2356f6b4096d36884eb5fef6, type: 3}
       propertyPath: m_LocalPosition.y
@@ -5885,7 +5885,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2677916884897582268, guid: e022f31f2356f6b4096d36884eb5fef6, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7.75
+      value: 5.7820053
       objectReference: {fileID: 0}
     - target: {fileID: 2677916884897582268, guid: e022f31f2356f6b4096d36884eb5fef6, type: 3}
       propertyPath: m_LocalRotation.w
@@ -6375,7 +6375,7 @@ Transform:
   m_GameObject: {fileID: 1020059417}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 4.910303, y: 0.82, z: -7.799999}
+  m_LocalPosition: {x: -19.5297, y: 0.82, z: 5.732006}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -9031,7 +9031,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2988623286497326235, guid: 0d2a13ad7e45c1f469692de40453aa2c, type: 3}
       propertyPath: m_fontColor32.rgba
-      value: 4280228378
+      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 2988623286497326235, guid: 0d2a13ad7e45c1f469692de40453aa2c, type: 3}
       propertyPath: m_TextStyleHashCode
@@ -9493,7 +9493,7 @@ Transform:
   m_GameObject: {fileID: 1130353911}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.25, y: 0.375, z: -0.95}
+  m_LocalPosition: {x: -13.282, y: 0.375, z: -25.39}
   m_LocalScale: {x: 0.05, y: 0.75, z: 0.05}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9605,7 +9605,7 @@ Transform:
   m_GameObject: {fileID: 1155111307}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.25, y: 0.375, z: -0.95}
+  m_LocalPosition: {x: -13.782, y: 0.375, z: -25.39}
   m_LocalScale: {x: 0.05, y: 0.75, z: 0.05}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10041,11 +10041,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FoamClumps
   foamPrefab: {fileID: 7823160126158128456, guid: 324d1c5b1541df3439924936fa73ed0d, type: 3}
-  spacing: 0.08
-  minSize: 0.11
-  maxSize: 0.18
+  spacing: 0.1
+  minSize: 0.14
+  maxSize: 0.23
   height: 0.25
-  maxMounds: 2000
+  maxMounds: 3000
 --- !u!114 &1186536403
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10406,7 +10406,7 @@ ParticleSystem:
     serializedVersion: 6
     enabled: 1
     type: 4
-    angle: 12
+    angle: 18
     length: 5
     boxThickness: {x: 0, y: 0, z: 0}
     radiusThickness: 1
@@ -16439,7 +16439,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2988623286497326235, guid: 0d2a13ad7e45c1f469692de40453aa2c, type: 3}
       propertyPath: m_fontColor32.rgba
-      value: 4280228378
+      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 2988623286497326235, guid: 0d2a13ad7e45c1f469692de40453aa2c, type: 3}
       propertyPath: m_TextStyleHashCode
@@ -16452,6 +16452,10 @@ PrefabInstance:
     - target: {fileID: 3918657880731740088, guid: 0d2a13ad7e45c1f469692de40453aa2c, type: 3}
       propertyPath: price
       value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 3918657880731740088, guid: 0d2a13ad7e45c1f469692de40453aa2c, type: 3}
+      propertyPath: bonusTimeMinutes
+      value: 300
       objectReference: {fileID: 0}
     - target: {fileID: 4579895203992932725, guid: 0d2a13ad7e45c1f469692de40453aa2c, type: 3}
       propertyPath: m_Name
@@ -16759,7 +16763,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2988623286497326235, guid: 0d2a13ad7e45c1f469692de40453aa2c, type: 3}
       propertyPath: m_fontColor32.rgba
-      value: 4280228378
+      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 2988623286497326235, guid: 0d2a13ad7e45c1f469692de40453aa2c, type: 3}
       propertyPath: m_TextStyleHashCode
@@ -16772,6 +16776,10 @@ PrefabInstance:
     - target: {fileID: 3918657880731740088, guid: 0d2a13ad7e45c1f469692de40453aa2c, type: 3}
       propertyPath: price
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 3918657880731740088, guid: 0d2a13ad7e45c1f469692de40453aa2c, type: 3}
+      propertyPath: bonusTimeMinutes
+      value: 300
       objectReference: {fileID: 0}
     - target: {fileID: 4579895203992932725, guid: 0d2a13ad7e45c1f469692de40453aa2c, type: 3}
       propertyPath: m_Name
@@ -17068,11 +17076,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FoamClumps
   foamPrefab: {fileID: 7823160126158128456, guid: 324d1c5b1541df3439924936fa73ed0d, type: 3}
-  spacing: 0.08
-  minSize: 0.11
-  maxSize: 0.18
+  spacing: 0.1
+  minSize: 0.14
+  maxSize: 0.23
   height: 0.25
-  maxMounds: 2000
+  maxMounds: 3000
 --- !u!1001 &1530567225
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -17372,6 +17380,22 @@ PrefabInstance:
     - target: {fileID: 5660823635623441942, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
       propertyPath: m_LocalPosition.z
       value: -0.00000023841858
+      objectReference: {fileID: 0}
+    - target: {fileID: 6833700745120786147, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
+      propertyPath: maxSize
+      value: 0.23
+      objectReference: {fileID: 0}
+    - target: {fileID: 6833700745120786147, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
+      propertyPath: minSize
+      value: 0.14
+      objectReference: {fileID: 0}
+    - target: {fileID: 6833700745120786147, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
+      propertyPath: spacing
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6833700745120786147, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
+      propertyPath: maxMounds
+      value: 3000
       objectReference: {fileID: 0}
     - target: {fileID: 7505463373058437804, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
       propertyPath: m_sharedMaterial
@@ -17809,7 +17833,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8443522932905810905, guid: 541df637ba417f2428fa5c106c148aa5, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.910303
+      value: -20.5297
       objectReference: {fileID: 0}
     - target: {fileID: 8443522932905810905, guid: 541df637ba417f2428fa5c106c148aa5, type: 3}
       propertyPath: m_LocalPosition.y
@@ -17817,7 +17841,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8443522932905810905, guid: 541df637ba417f2428fa5c106c148aa5, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7.8999996
+      value: 5.6320057
       objectReference: {fileID: 0}
     - target: {fileID: 8443522932905810905, guid: 541df637ba417f2428fa5c106c148aa5, type: 3}
       propertyPath: m_LocalRotation.w
@@ -18430,7 +18454,7 @@ ParticleSystem:
     serializedVersion: 6
     enabled: 1
     type: 4
-    angle: 6
+    angle: 10
     length: 5
     boxThickness: {x: 0, y: 0, z: 0}
     radiusThickness: 1
@@ -20573,7 +20597,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 83ebd4355d47fe147b9c86a82af9e479, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.510303
+      value: -19.929699
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 83ebd4355d47fe147b9c86a82af9e479, type: 3}
       propertyPath: m_LocalPosition.y
@@ -20581,7 +20605,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 83ebd4355d47fe147b9c86a82af9e479, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7.8999996
+      value: 5.6320057
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 83ebd4355d47fe147b9c86a82af9e479, type: 3}
       propertyPath: m_LocalRotation.w
@@ -20916,7 +20940,7 @@ Transform:
   m_GameObject: {fileID: 1691994299}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.25, y: 0.375, z: 0.95}
+  m_LocalPosition: {x: -13.782, y: 0.375, z: -23.49}
   m_LocalScale: {x: 0.05, y: 0.75, z: 0.05}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -24885,6 +24909,22 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: -0.00000023841858
       objectReference: {fileID: 0}
+    - target: {fileID: 6833700745120786147, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
+      propertyPath: maxSize
+      value: 0.23
+      objectReference: {fileID: 0}
+    - target: {fileID: 6833700745120786147, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
+      propertyPath: minSize
+      value: 0.14
+      objectReference: {fileID: 0}
+    - target: {fileID: 6833700745120786147, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
+      propertyPath: spacing
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6833700745120786147, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
+      propertyPath: maxMounds
+      value: 3000
+      objectReference: {fileID: 0}
     - target: {fileID: 7505463373058437804, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
       propertyPath: m_sharedMaterial
       value: 
@@ -25528,7 +25568,7 @@ ParticleSystem:
     serializedVersion: 6
     enabled: 1
     type: 4
-    angle: 1
+    angle: 2
     length: 5
     boxThickness: {x: 0, y: 0, z: 0}
     radiusThickness: 1

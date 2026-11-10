@@ -402,11 +402,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FoamClumps
   foamPrefab: {fileID: 7823160126158128456, guid: 324d1c5b1541df3439924936fa73ed0d, type: 3}
-  spacing: 0.08
-  minSize: 0.11
-  maxSize: 0.18
+  spacing: 0.1
+  minSize: 0.14
+  maxSize: 0.23
   height: 0.25
-  maxMounds: 2000
+  maxMounds: 3000
 --- !u!4 &1134249607022638864 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 149abe4e850caf54d9d30d2dfa6a586d, type: 3}
