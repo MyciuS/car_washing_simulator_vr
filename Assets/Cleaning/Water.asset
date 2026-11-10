@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: Water
   m_EditorClassIdentifier: Assembly-CSharp::CleaningTool
   radius: 0.12
-  looseDirtRemoval: 0.005
+  looseDirtRemoval: 0.02
   grimeRemoval: 0
-  soakedLooseDirtRemoval: 0.05
-  soakedGrimeRemoval: 0.04
+  soakedLooseDirtRemoval: 0.15
+  soakedGrimeRemoval: 0.12
   soapAdded: 0
   soapSoakTime: 30
-  soapRinse: 0.05
+  soapRinse: 0.3
   wetnessAdded: 0.04
   drying: 0
   polish: 0

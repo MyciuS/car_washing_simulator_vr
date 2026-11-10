@@ -18,7 +18,7 @@ MonoBehaviour:
   soakedLooseDirtRemoval: 0.3
   soakedGrimeRemoval: 0.35
   soapAdded: 0.15
-  soapSoakTime: 30
+  soapSoakTime: 15
   soapRinse: 0
   wetnessAdded: 0.03
   drying: 0

@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: Sponge Dry
   m_EditorClassIdentifier: Assembly-CSharp::CleaningTool
   radius: 0.2
-  looseDirtRemoval: 0.06
-  grimeRemoval: 0.02
-  soakedLooseDirtRemoval: 0.1
-  soakedGrimeRemoval: 0.05
+  looseDirtRemoval: 0.1
+  grimeRemoval: 0.05
+  soakedLooseDirtRemoval: 0.15
+  soakedGrimeRemoval: 0.1
   soapAdded: 0
   soapSoakTime: 30
   soapRinse: 0

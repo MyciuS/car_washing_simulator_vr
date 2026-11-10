@@ -702,6 +702,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DirtySurface
   pixelsPerMeter: 80
   dirtMask: {fileID: 0}
+  dirtiness: 1
+  randomDirtiness: 0.15
   lightMudColor: {r: 0.55, g: 0.45, b: 0.32, a: 1}
   darkMudColor: {r: 0.28, g: 0.21, b: 0.14, a: 1}
   grimeColor: {r: 0.36, g: 0.34, b: 0.3, a: 1}
@@ -4222,6 +4224,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DirtySurface
   pixelsPerMeter: 80
   dirtMask: {fileID: 0}
+  dirtiness: 1
+  randomDirtiness: 0.15
   lightMudColor: {r: 0.55, g: 0.45, b: 0.32, a: 1}
   darkMudColor: {r: 0.28, g: 0.21, b: 0.14, a: 1}
   grimeColor: {r: 0.36, g: 0.34, b: 0.3, a: 1}
@@ -4441,6 +4445,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DirtySurface
   pixelsPerMeter: 80
   dirtMask: {fileID: 0}
+  dirtiness: 1
+  randomDirtiness: 0.15
   lightMudColor: {r: 0.55, g: 0.45, b: 0.32, a: 1}
   darkMudColor: {r: 0.28, g: 0.21, b: 0.14, a: 1}
   grimeColor: {r: 0.36, g: 0.34, b: 0.3, a: 1}
@@ -4767,6 +4773,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DirtySurface
   pixelsPerMeter: 80
   dirtMask: {fileID: 0}
+  dirtiness: 1
+  randomDirtiness: 0.15
   lightMudColor: {r: 0.55, g: 0.45, b: 0.32, a: 1}
   darkMudColor: {r: 0.28, g: 0.21, b: 0.14, a: 1}
   grimeColor: {r: 0.36, g: 0.34, b: 0.3, a: 1}
@@ -10060,6 +10068,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DirtySurface
   pixelsPerMeter: 80
   dirtMask: {fileID: 2800000, guid: 0dd5eaa0f5acc9f4da61dee3430f13a8, type: 3}
+  dirtiness: 1
+  randomDirtiness: 0.15
   lightMudColor: {r: 0.55, g: 0.45, b: 0.32, a: 1}
   darkMudColor: {r: 0.28, g: 0.21, b: 0.14, a: 1}
   grimeColor: {r: 0.36, g: 0.34, b: 0.3, a: 1}
@@ -16969,6 +16979,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DirtySurface
   pixelsPerMeter: 80
   dirtMask: {fileID: 0}
+  dirtiness: 1
+  randomDirtiness: 0.15
   lightMudColor: {r: 0.55, g: 0.45, b: 0.32, a: 1}
   darkMudColor: {r: 0.28, g: 0.21, b: 0.14, a: 1}
   grimeColor: {r: 0.36, g: 0.34, b: 0.3, a: 1}
@@ -17365,6 +17377,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3767425045199902431, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
+      propertyPath: dirtiness
+      value: 0.45
+      objectReference: {fileID: 0}
     - target: {fileID: 5047391688898284104, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -17644,6 +17660,10 @@ PrefabInstance:
     - target: {fileID: 1140028714762525086, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3767425045199902431, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
+      propertyPath: dirtiness
+      value: 1.35
       objectReference: {fileID: 0}
     - target: {fileID: 5047391688898284104, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -24892,6 +24912,10 @@ PrefabInstance:
     - target: {fileID: 1140028714762525086, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3767425045199902431, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
+      propertyPath: dirtiness
+      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 5047391688898284104, guid: 3b1aee8a10e40ab4b921dd3f5927063f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
