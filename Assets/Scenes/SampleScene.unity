@@ -2686,6 +2686,83 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3dbab6bcee189c24785282462bb15916, type: 3}
+--- !u!1001 &189294662
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -14.74
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.029999852
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1.58
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.70710784
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.70710576
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7308745246921621676, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 2744a66e17e73df42a5bc51710616c66, type: 2}
+    - target: {fileID: -4683669308469848369, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: f800e7d3ec2491b49aa423e61deabec5, type: 2}
+    - target: {fileID: -3378901634197446680, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 2744a66e17e73df42a5bc51710616c66, type: 2}
+    - target: {fileID: 919132149155446097, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: m_Name
+      value: NissanZ2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3447385308690097955, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 2744a66e17e73df42a5bc51710616c66, type: 2}
+    - target: {fileID: 5593965834140042967, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 2744a66e17e73df42a5bc51710616c66, type: 2}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ad9d5ff1023f95a4bb67d45209268e96, type: 3}
 --- !u!1001 &190924568
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -39671,3 +39748,4 @@ SceneRoots:
   - {fileID: 491042149}
   - {fileID: 978664945}
   - {fileID: 761540936}
+  - {fileID: 189294662}
