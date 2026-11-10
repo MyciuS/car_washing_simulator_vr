@@ -95,6 +95,8 @@ public class DirtySurface : MonoBehaviour
     float nextSoakRefresh;
     // Less soap than this is invisible, so it counts as no soap (no bonus, gets rinsed away).
     const float MinSoap = 0.05f;
+    // All the dirt the surface started with, to work out how much of it has been cleaned off.
+    float startingDirt;
 
     void Start()
     {
@@ -412,10 +414,43 @@ public class DirtySurface : MonoBehaviour
                 grime[i] = Mathf.Clamp01(0.35f + patches * 0.4f);
                 mudShade[i] = Mathf.Clamp01(0.3f + road * 0.5f + (splashes - 0.5f) + (grain - 0.5f) * 0.4f);
                 foamVariation[i] = Mathf.Clamp01(Noise(p * 20f, seed + 130f));
+                startingDirt += DirtAt(i);
             }
             UpdatePixel(i);
         }
     }
+
+    // How dirty one pixel looks: mud, plus the part of the grime that shows.
+    float DirtAt(int i)
+    {
+        return looseDirt[i] + grime[i] * grimeStrength;
+    }
+
+    // How clean this surface is: 0 = as dirty as it started, 1 = all the dirt is gone.
+    // Soap still on it counts against it, so the car has to be rinsed too.
+    public float GetCleanliness()
+    {
+        if (looseDirt == null)
+            return 0f;
+        float dirtLeft = 0f;
+        int pixelsOnSurface = 0;
+        int soapyPixels = 0;
+        for (int i = 0; i < looseDirt.Length; i++)
+        {
+            if (!onSurface[i])
+                continue;
+            pixelsOnSurface++;
+            dirtLeft += DirtAt(i);
+            if (soap[i] >= MinSoap)
+                soapyPixels++;
+        }
+        float dirtRemoved = startingDirt > 0f ? 1f - dirtLeft / startingDirt : 1f;
+        float soapy = pixelsOnSurface > 0 ? (float)soapyPixels / pixelsOnSurface : 0f;
+        return Mathf.Clamp01(dirtRemoved) * (1f - soapy);
+    }
+
+    // How many pixels this surface has (bigger surfaces count more towards how clean the whole car is).
+    public int PixelCount => width * height;
 
     // The lowest point of the whole car (all its meshes), used as "the ground" for road dirt.
     float LowestPointOfCar()
