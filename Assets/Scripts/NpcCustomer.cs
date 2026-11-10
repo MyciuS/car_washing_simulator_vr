@@ -5,8 +5,8 @@ using UnityEngine.InputSystem;
 // An NPC who walks around town and owns a car that is parked somewhere (CarToWash).
 // Walk up to them and look at them: they offer you money to wash their car. Press the talk
 // button (A on the right controller, E on the keyboard) to say yes. They then walk to their car
-// and wait next to it. Once the car is clean enough (and rinsed), they pay you when you come
-// back to them, and go back to their walk. Wash it quickly (within bonusTimeMinutes of game
+// and wait next to it. Once the car is clean enough (and rinsed), they pay you straight away
+// (as long as you are still near the car or them), and go back to their walk. Wash it quickly (within bonusTimeMinutes of game
 // time) and they pay a bonus on top.
 // Put this on the NPC, next to NpcWalker.
 [RequireComponent(typeof(NpcWalker))]
@@ -125,6 +125,12 @@ public class NpcCustomer : MonoBehaviour
 
             case State.GoingToCar:
                 UpdateCarLabel();
+                // Washed already, before the owner even got there.
+                if (CarIsClean() && PlayerIsNearby())
+                {
+                    Pay();
+                    break;
+                }
                 if (walker.HasArrived)
                 {
                     state = State.WaitingByCar;
@@ -135,19 +141,21 @@ public class NpcCustomer : MonoBehaviour
 
             case State.WaitingByCar:
                 UpdateCarLabel();
-                if (PlayerDistance() <= talkDistance + 1f)
+                if (CarIsClean() && PlayerIsNearby())
                 {
                     walker.Face(playerHead.position);
-                    if (cleanliness >= cleanEnough)
-                        Pay();
-                    else
-                        Say(Mathf.RoundToInt(cleanliness * 100f) + "% clean.\nI'd like it at least "
-                            + Mathf.RoundToInt(cleanEnough * 100f) + "% clean,\nand rinsed, please.");
+                    Pay();
+                }
+                else if (PlayerDistance() <= talkDistance + 1f)
+                {
+                    walker.Face(playerHead.position);
+                    Say(Mathf.RoundToInt(cleanliness * 100f) + "% clean.\nI'd like it at least "
+                        + Mathf.RoundToInt(cleanEnough * 100f) + "% clean,\nand rinsed, please.");
                 }
                 else
                 {
                     walker.Face(car.transform.position);
-                    Say(cleanliness >= cleanEnough ? "Looks great!\nCome get your money!" : null);
+                    Say(CarIsClean() ? "Looks great!\nCome get your money!" : null);
                 }
                 break;
 
@@ -217,6 +225,20 @@ public class NpcCustomer : MonoBehaviour
         Vector3 looking = playerHead.forward;
         looking.y = 0f;
         return toNpc.magnitude <= talkDistance && Vector3.Dot(toNpc.normalized, looking.normalized) > 0.5f;
+    }
+
+    // Clean enough to pay, judged the same way as the label shows it ("85% clean" counts as 85%).
+    bool CarIsClean()
+    {
+        return Mathf.RoundToInt(cleanliness * 100f) >= Mathf.RoundToInt(cleanEnough * 100f);
+    }
+
+    // The player is close to the owner or to the car (still standing at it after the last wipe).
+    bool PlayerIsNearby()
+    {
+        Vector3 toCar = car.transform.position - playerHead.position;
+        toCar.y = 0f;
+        return PlayerDistance() <= talkDistance + 1f || toCar.magnitude <= 5f;
     }
 
     float PlayerDistance()

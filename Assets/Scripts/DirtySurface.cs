@@ -122,6 +122,7 @@ public class DirtySurface : MonoBehaviour
         FindPixelPositions(mesh);
         FindDownhillPixels();
         MakeStartingDirt(dirtMask != null ? ReadTexture(dirtMask) : null);
+        LetPlayerPassThrough();
 
         // A texture that shows paint + dirt, put on this object's material.
         surfaceTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
@@ -188,7 +189,7 @@ public class DirtySurface : MonoBehaviour
         onSurface = new bool[width * height];
         reachable = new bool[width * height];
         Vector2 size = new Vector2(width, height);
-        Collider[] carColliders = transform.root.GetComponentsInChildren<Collider>();
+        Collider[] carColliders = CarRoot().GetComponentsInChildren<Collider>();
         Physics.SyncTransforms();
 
         for (int t = 0; t < triangles.Length; t += 3)
@@ -254,6 +255,27 @@ public class DirtySurface : MonoBehaviour
         }
     }
 
+    // The whole car this surface belongs to: the object with CarToWash on it, or else the top object.
+    // (Not always the top object: the NPC cars sit together under one "NPCs" object.)
+    Transform CarRoot()
+    {
+        CarToWash car = GetComponentInParent<CarToWash>();
+        return car != null ? car.transform : transform.root;
+    }
+
+    // In VR the player's body follows their head. Leaning over the car to scrub it would make the
+    // body walk up the hood like a ramp and end up standing on the car. So the player's body
+    // (its CharacterController) goes through the car instead. Tools still touch it and clean it.
+    void LetPlayerPassThrough()
+    {
+        Collider[] carColliders = CarRoot().GetComponentsInChildren<Collider>();
+        foreach (CharacterController body in FindObjectsByType<CharacterController>())
+        {
+            foreach (Collider carCollider in carColliders)
+                Physics.IgnoreCollision(body, carCollider);
+        }
+    }
+
     static readonly RaycastHit[] reachHits = new RaycastHit[8];
 
     // Can the player reach this triangle of the car with a tool? Not if it faces down (under the car),
@@ -286,7 +308,7 @@ public class DirtySurface : MonoBehaviour
         float pixelSize = 1f / pixelsPerMeter;
         const float steep = 0.3f; // flatter than this (about 17 degrees) and soap stays put
         Bounds car = GetComponent<Renderer>().bounds;
-        foreach (Renderer r in transform.root.GetComponentsInChildren<Renderer>())
+        foreach (Renderer r in CarRoot().GetComponentsInChildren<Renderer>())
             car.Encapsulate(r.bounds);
         carCenter = car.center;
 
@@ -504,7 +526,7 @@ public class DirtySurface : MonoBehaviour
     float LowestPointOfCar()
     {
         float lowest = float.MaxValue;
-        foreach (MeshRenderer r in transform.root.GetComponentsInChildren<MeshRenderer>())
+        foreach (MeshRenderer r in CarRoot().GetComponentsInChildren<MeshRenderer>())
             lowest = Mathf.Min(lowest, r.bounds.min.y);
         return lowest;
     }
