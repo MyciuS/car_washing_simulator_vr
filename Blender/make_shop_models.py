@@ -164,14 +164,16 @@ def export(col, filename):
 # ---------- the shop building (7 m x 6 m, door in the front wall at -Y) ----------
 shop = collection("Shop")
 W, D, H, T = 3.5, 3.0, 3.2, 0.2          # half width, half depth, wall height, wall thickness
-box("Floor", -W, W, -D, D, 0, 0.06, "ShopFloor")
-box("Door Mat", -0.8, 0.8, -D - 0.9, -D + 0.6, 0, 0.065, "Mat")
+box("Floor", -W + T, W - T, -D + T, D - T, 0, 0.06, "ShopFloor")      # inside the walls only
+box("Threshold", -0.9, 0.9, -D, -D + T, 0, 0.06, "ShopFloor")       # floor in the doorway
+# (Parts never overlap with faces in the same place: that flickers in the game, "z-fighting".)
+box("Door Mat", -0.8, 0.8, -D - 0.9, -D, 0, 0.025, "Mat")
 box("Wall Back", -W, W, D - T, D, 0, H, "ShopWall")
 box("Wall Left", -W, -W + T, -D, D - T, 0, H, "ShopWall")
 box("Wall Right", W - T, W, -D, D - T, 0, H, "ShopWall")
 # Front wall: low wall under the windows, a band above, pillars beside the door, glass windows.
-box("Wall Front Low L", -W + T, -0.9, -D, -D + T, 0, 0.9, "ShopWall")
-box("Wall Front Low R", 0.9, W - T, -D, -D + T, 0, 0.9, "ShopWall")
+box("Wall Front Low L", -W + T, -1.2, -D, -D + T, 0, 0.9, "ShopWall")
+box("Wall Front Low R", 1.2, W - T, -D, -D + T, 0, 0.9, "ShopWall")
 box("Wall Front Top", -W + T, W - T, -D, -D + T, 2.3, H, "ShopWall")
 box("Door Post L", -1.2, -0.9, -D, -D + T, 0, 2.3, "DoorFrame")
 box("Door Post R", 0.9, 1.2, -D, -D + T, 0, 2.3, "DoorFrame")
@@ -188,7 +190,7 @@ box("Roof", -W - 0.3, W + 0.3, -D - 0.3, D + 0.3, H, H + 0.25, "ShopRoof")
 for i, x in enumerate((-1.8, 0.0, 1.8)):
     box("Ceiling Light %d" % i, x - 0.6, x + 0.6, -0.5, 0.5, H - 0.04, H, "ShopLight")
 box("Sign Board", -2.6, 2.6, -D - 0.32, -D - 0.12, H + 0.25, H + 1.0, "SignBoard")
-box("Sign Frame", -2.65, 2.65, -D - 0.3, -D - 0.1, H + 0.2, H + 1.05, "ShopTrim")
+box("Sign Frame", -2.65, 2.65, -D - 0.29, -D - 0.1, H + 0.25, H + 1.05, "ShopTrim")
 
 # Striped awning over the front: slats sloping down and out, with a short hanging edge.
 aw = []
@@ -224,7 +226,7 @@ def shelf_unit(name, x0, x1, y0, y1, facing, heights=(0.1, 0.55, 1.0, 1.45, 1.9)
     if facing == "-Y":
         parts.append(box(name + " Side L", x0, x0 + t, y0, y1, 0, 2.0, "ShelfMetal"))
         parts.append(box(name + " Side R", x1 - t, x1, y0, y1, 0, 2.0, "ShelfMetal"))
-        parts.append(box(name + " Back", x0, x1, y1 - 0.02, y1, 0, 2.0, "ShelfMetal"))
+        parts.append(box(name + " Back", x0 + t, x1 - t, y1 - 0.02, y1, 0, 2.0, "ShelfMetal"))
         for k, z in enumerate(heights):
             parts.append(box(name + " Board %d" % k, x0 + t, x1 - t, y0, y1 - 0.02, z - 0.03, z, "ShelfWood"))
             parts.append(box(name + " Strip %d" % k, x0 + t, x1 - t, y0 - 0.012, y0, z - 0.05, z + 0.005, "PriceStrip"))
@@ -234,7 +236,7 @@ def shelf_unit(name, x0, x1, y0, y1, facing, heights=(0.1, 0.55, 1.0, 1.45, 1.9)
         parts.append(box(name + " Side A", x0, x1, y0, y0 + t, 0, 2.0, "ShelfMetal"))
         parts.append(box(name + " Side B", x0, x1, y1 - t, y1, 0, 2.0, "ShelfMetal"))
         bx0, bx1 = (back, back + 0.02) if sign == 1 else (back - 0.02, back)
-        parts.append(box(name + " Back", bx0, bx1, y0, y1, 0, 2.0, "ShelfMetal"))
+        parts.append(box(name + " Back", bx0, bx1, y0 + t, y1 - t, 0, 2.0, "ShelfMetal"))
         for k, z in enumerate(heights):
             parts.append(box(name + " Board %d" % k, min(x0, x1) + (0.02 if sign == 1 else 0), max(x0, x1) - (0 if sign == 1 else 0.02),
                              y0 + t, y1 - t, z - 0.03, z, "ShelfWood"))
@@ -250,11 +252,11 @@ shelf_unit("Shelf Soaps", -W + T, -W + T + 0.45, -1.6, 1.6, "+X")
 
 # Drinks cooler on the right wall (open front, cold blue inside).
 cx0, cx1, cy0, cy1 = W - T - 0.6, W - T, -0.2, 1.8
-box("Cooler Side A", cx0, cx1, cy0, cy0 + 0.05, 0, 2.1, "Cooler")
-box("Cooler Side B", cx0, cx1, cy1 - 0.05, cy1, 0, 2.1, "Cooler")
+box("Cooler Side A", cx0, cx1, cy0, cy0 + 0.05, 0.3, 1.95, "Cooler")
+box("Cooler Side B", cx0, cx1, cy1 - 0.05, cy1, 0.3, 1.95, "Cooler")
 box("Cooler Top", cx0, cx1, cy0, cy1, 1.95, 2.1, "Cooler")
 box("Cooler Base", cx0, cx1, cy0, cy1, 0, 0.3, "Cooler")
-box("Cooler Back", cx1 - 0.04, cx1, cy0, cy1, 0.3, 1.95, "CoolerInside")
+box("Cooler Back", cx1 - 0.04, cx1, cy0 + 0.05, cy1 - 0.05, 0.3, 1.95, "CoolerInside")
 for k, z in enumerate((0.75, 1.2, 1.65)):
     box("Cooler Shelf %d" % k, cx0, cx1 - 0.04, cy0 + 0.05, cy1 - 0.05, z - 0.025, z, "CoolerInside")
     box("Cooler Strip %d" % k, cx0 - 0.012, cx0, cy0 + 0.05, cy1 - 0.05, z - 0.045, z + 0.005, "PriceStrip")
