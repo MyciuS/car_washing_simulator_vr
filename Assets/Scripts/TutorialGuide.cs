@@ -124,7 +124,8 @@ public class TutorialGuide : MonoBehaviour
             new Step
             {
                 title = "Grab the water gun",
-                text = "Reach for the water gun on the table and hold the <b>grip</b> button.",
+                text = "Turn around: the tools are on the table <b>behind you</b>.\n\n" +
+                       "Reach for the water gun and hold the <b>grip</b> button.",
                 isDone = () => waterGun.IsHeld,
                 pointAt = () => waterGun.transform,
             },

@@ -263,17 +263,70 @@ public class DirtySurface : MonoBehaviour
         return car != null ? car.transform : transform.root;
     }
 
+    const string BlockerName = "Player Blocker";
+
     // In VR the player's body follows their head. Leaning over the car to scrub it would make the
-    // body walk up the hood like a ramp and end up standing on the car. So the player's body
-    // (its CharacterController) goes through the car instead. Tools still touch it and clean it.
+    // body walk up the curved hood like a ramp and end up standing on the car.
+    // So the player's body (its CharacterController) doesn't touch the car's own colliders. Instead
+    // it bumps into an invisible box inside the car, with straight sides that are too high to
+    // step onto: the player can't walk through the car, and can't climb it either.
+    // Tools still touch the real car and clean it.
     void LetPlayerPassThrough()
     {
-        Collider[] carColliders = CarRoot().GetComponentsInChildren<Collider>();
+        Transform car = CarRoot();
+        Collider[] carColliders = car.GetComponentsInChildren<Collider>();
         foreach (CharacterController body in FindObjectsByType<CharacterController>())
         {
             foreach (Collider carCollider in carColliders)
-                Physics.IgnoreCollision(body, carCollider);
+            {
+                if (carCollider.name != BlockerName)
+                    Physics.IgnoreCollision(body, carCollider);
+            }
         }
+        if (car.Find(BlockerName) == null)
+            AddPlayerBlocker(car, carColliders);
+    }
+
+    // The invisible box: the car's size seen from above, a bit smaller so it stays inside the
+    // car's body, and 0.8 m high (the player's body steps up at most 0.5 m).
+    // It is on the "Ignore Raycast" layer, so water, soap and tool checks go right through it.
+    static void AddPlayerBlocker(Transform car, Collider[] carColliders)
+    {
+        bool found = false;
+        Bounds bounds = new Bounds();
+        foreach (Collider c in carColliders)
+        {
+            if (c.isTrigger)
+                continue;
+            // The collider's box, turned into the car's own directions (the car can be turned any way).
+            Bounds own = c is MeshCollider mc && mc.sharedMesh != null ? mc.sharedMesh.bounds
+                : new Bounds(c.transform.InverseTransformPoint(c.bounds.center), Vector3.zero);
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 corner = new Vector3(i % 2 == 0 ? own.min.x : own.max.x,
+                    i / 2 % 2 == 0 ? own.min.y : own.max.y, i / 4 == 0 ? own.min.z : own.max.z);
+                Vector3 local = car.InverseTransformPoint(c.transform.TransformPoint(corner));
+                if (found)
+                    bounds.Encapsulate(local);
+                else
+                    bounds = new Bounds(local, Vector3.zero);
+                found = true;
+            }
+        }
+        if (!found)
+            return;
+
+        const float inset = 0.18f, bottom = 0.05f, height = 0.8f;
+        GameObject blocker = new GameObject(BlockerName);
+        blocker.layer = LayerMask.NameToLayer("Ignore Raycast");
+        blocker.transform.SetParent(car, false);
+        BoxCollider box = blocker.AddComponent<BoxCollider>();
+        Vector3 scale = car.lossyScale;
+        box.size = new Vector3(
+            Mathf.Max(0.1f, bounds.size.x - inset * 2f / scale.x),
+            height / scale.y,
+            Mathf.Max(0.1f, bounds.size.z - inset * 2f / scale.z));
+        box.center = new Vector3(bounds.center.x, bounds.min.y + (bottom + height / 2f) / scale.y, bounds.center.z);
     }
 
     static readonly RaycastHit[] reachHits = new RaycastHit[8];
