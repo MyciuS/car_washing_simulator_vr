@@ -220,7 +220,9 @@ public class TutorialGuide : MonoBehaviour
                 text = "People in town will pay you to wash their cars. Walk up to someone and look " +
                        "at them, then press <b>A</b> to take the job.\n\n" +
                        "Wash the car within <b>5 minutes</b> and they add a <b>50% bonus</b>.\n" +
-                       "Look at your <b>watch</b> and press <b>X</b> to see the time and your money.\n\n" +
+                       "Look at your <b>watch</b> and press <b>X</b> to see the time and your money.\n" +
+                       "You start with only a sponge: buy the water gun, nozzles, soaps and snacks " +
+                       "in the <b>shop</b> by the car wash (grab something to buy it).\n\n" +
                        "Press <b>A</b> to start the game.",
             },
         };

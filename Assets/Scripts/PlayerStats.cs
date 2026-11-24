@@ -37,9 +37,24 @@ public class PlayerStats : MonoBehaviour
         money += amount;
     }
 
+    // Pays for something. Returns false (and takes nothing) if there isn't enough money.
+    public bool TrySpend(int amount)
+    {
+        if (money < amount)
+            return false;
+        money -= amount;
+        return true;
+    }
+
     // Call this when the player eats something.
     public void Eat(float amount)
     {
         food = Mathf.Min(food + amount, 100f);
+    }
+
+    // Call this when the player drinks coffee or an energy drink.
+    public void AddEnergy(float amount)
+    {
+        energy = Mathf.Min(energy + amount, 100f);
     }
 }
