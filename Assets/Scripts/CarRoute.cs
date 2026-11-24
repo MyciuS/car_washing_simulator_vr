@@ -8,6 +8,10 @@ public class CarRoute : MonoBehaviour
     [SerializeField, Min(0f)] float turnSpeed = 90f;
     [SerializeField, Min(0.01f)] float brakingDistance = 3f;
 
+    [SerializeField] AudioClip engineClip;
+    [SerializeField, Range(0f, 1f)] float engineVolume = 0.22f;
+    AudioSource engine;
+
     [SerializeField] Transform[] wheels;
     [SerializeField] Vector3 wheelSpinAxis = Vector3.right;
     [SerializeField, Min(0.01f)] float wheelRadius = 0.32f;
@@ -41,6 +45,20 @@ public class CarRoute : MonoBehaviour
 
             if (direction.sqrMagnitude > 0.0001f)
                 transform.rotation = Quaternion.LookRotation(direction);
+        }
+
+        if (engineClip != null)
+        {
+            engine = gameObject.AddComponent<AudioSource>();
+            engine.clip = engineClip;
+            engine.loop = true;
+            engine.playOnAwake = false;
+            engine.spatialBlend = 1f;
+            engine.minDistance = 2.5f;
+            engine.maxDistance = 35f;
+            engine.rolloffMode = AudioRolloffMode.Logarithmic;
+            engine.dopplerLevel = 0.25f;
+            engine.volume = 0f;
         }
     }
 
@@ -95,6 +113,7 @@ public class CarRoute : MonoBehaviour
         if (nextPoint >= route.Count)
         {
             SetSteering(0f);
+            UpdateEngine(0f);
             return;
         }
 
@@ -168,7 +187,23 @@ public class CarRoute : MonoBehaviour
             if (wheel != null)
                 wheel.Rotate(wheelSpinAxis, rollDegrees, Space.Self);
         }
+        UpdateEngine(Time.deltaTime > 0f ? distance / Time.deltaTime : 0f);
+    }
 
+    void UpdateEngine(float metresPerSecond)
+    {
+        if (engine == null) return;
+        float moving = metresPerSecond > 0.05f ? Mathf.Clamp01(metresPerSecond / Mathf.Max(speed, 0.01f)) : 0f;
+        float volume = moving > 0f ? engineVolume * Mathf.Lerp(0.5f, 1f, moving) : 0f;
+        engine.volume = Mathf.MoveTowards(engine.volume, volume, Time.deltaTime * 0.6f);
+        engine.pitch = Mathf.MoveTowards(engine.pitch, Mathf.Lerp(0.7f, 1.15f, moving), Time.deltaTime);
+        if (moving > 0f && !engine.isPlaying) engine.Play();
+        else if (engine.volume <= 0f && engine.isPlaying) engine.Stop();
+    }
+
+    void OnDisable()
+    {
+        if (engine != null) engine.Stop();
     }
 
     void SetSteering(float targetAngle)
