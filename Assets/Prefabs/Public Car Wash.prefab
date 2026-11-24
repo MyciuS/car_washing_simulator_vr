@@ -140,7 +140,7 @@ MonoBehaviour:
   pixelsPerMeter: 12
   dryingTime: 150
   foamTime: 90
-  minSpotRadius: 0.3
+  minSpotRadius: 0.45
 --- !u!1 &9178165708832666894
 GameObject:
   m_ObjectHideFlags: 0

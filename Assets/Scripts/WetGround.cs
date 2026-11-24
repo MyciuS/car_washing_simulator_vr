@@ -15,7 +15,7 @@ public class WetGround : MonoBehaviour
     public float dryingTime = 150f;
     public float foamTime = 90f;
     // Smallest wet spot, in meters (water splashes and spreads when it lands).
-    public float minSpotRadius = 0.3f;
+    public float minSpotRadius = 0.45f;
 
     // Every wet floor in the scene, so sprays and cars can find the one under them.
     static readonly List<WetGround> allFloors = new List<WetGround>();
