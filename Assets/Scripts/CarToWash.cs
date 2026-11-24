@@ -43,6 +43,33 @@ public class CarToWash : MonoBehaviour
         return pixels > 0 ? total / pixels : 0f;
     }
 
+    // The numbers from all DirtySurfaces on the car together (see DirtySurface.Stats).
+    public DirtySurface.Stats GetStats()
+    {
+        DirtySurface.Stats total = new DirtySurface.Stats();
+        int pixels = 0;
+        foreach (DirtySurface surface in surfaces)
+        {
+            DirtySurface.Stats s = surface.GetStats();
+            int weight = surface.PixelCount;
+            total.dirtRemoved += s.dirtRemoved * weight;
+            total.soapy += s.soapy * weight;
+            total.soaked += s.soaked * weight;
+            total.wet += s.wet * weight;
+            total.shiny += s.shiny * weight;
+            pixels += weight;
+        }
+        if (pixels > 0)
+        {
+            total.dirtRemoved /= pixels;
+            total.soapy /= pixels;
+            total.soaked /= pixels;
+            total.wet /= pixels;
+            total.shiny /= pixels;
+        }
+        return total;
+    }
+
     public void ShowLabel(string text)
     {
         if (label == null)

@@ -519,6 +519,51 @@ public class DirtySurface : MonoBehaviour
     // This much soap (or more) on a pixel counts as fully soapy for GetCleanliness.
     const float FullFoam = 0.4f;
 
+    // What the reachable part of the surface looks like right now, each as a share from 0 to 1.
+    // The tutorial uses these to see what the player has done.
+    public struct Stats
+    {
+        public float dirtRemoved; // how much of the starting dirt is gone
+        public float soapy;       // covered in soap
+        public float soaked;      // soap that has soaked long enough (foam turned brown, ready to rinse)
+        public float wet;         // wet paint
+        public float shiny;       // polished paint
+    }
+
+    public Stats GetStats()
+    {
+        Stats stats = new Stats();
+        if (looseDirt == null)
+            return stats;
+        float dirtLeft = 0f;
+        int count = 0, soapyPixels = 0, soakedPixels = 0, wetPixels = 0, shinyPixels = 0;
+        for (int i = 0; i < looseDirt.Length; i++)
+        {
+            if (!reachable[i])
+                continue;
+            count++;
+            dirtLeft += DirtAt(i);
+            if (soap[i] >= MinSoap)
+            {
+                soapyPixels++;
+                if (Time.time >= soapReadyTime[i])
+                    soakedPixels++;
+            }
+            if (wetness[i] > 0.2f)
+                wetPixels++;
+            if (shine[i] > 0.3f)
+                shinyPixels++;
+        }
+        if (count == 0)
+            return stats;
+        stats.dirtRemoved = startingDirt > 0f ? Mathf.Clamp01(1f - dirtLeft / startingDirt) : 1f;
+        stats.soapy = (float)soapyPixels / count;
+        stats.soaked = (float)soakedPixels / count;
+        stats.wet = (float)wetPixels / count;
+        stats.shiny = (float)shinyPixels / count;
+        return stats;
+    }
+
     // How many pixels this surface has (bigger surfaces count more towards how clean the whole car is).
     public int PixelCount => width * height;
 

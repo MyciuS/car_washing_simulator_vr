@@ -44,6 +44,13 @@ public class RubCleaner : MonoBehaviour
     float soapLoad;
     float dirtiness;
 
+    // True while the player holds the tool.
+    public bool IsHeld => grab != null && grab.isSelected;
+    // True while the tool has soap in it (after dipping it in the bucket).
+    public bool HasSoap => soapLoad > 0.02f;
+    // How many meters the tool has been rubbed over cars in total.
+    public float MetersRubbed { get; private set; }
+
     XRGrabInteractable grab;
     Material toolMaterial;
     Color cleanColor;
@@ -112,6 +119,7 @@ public class RubCleaner : MonoBehaviour
         CleaningTool tool = soapy ? withSoap : withoutSoap;
         float strength = rubbed / metersPerUse * (1f - dirtiness * dirtyPenalty);
         surface.Spray(hit.textureCoord, hit.point, hit.normal, tool, strength);
+        MetersRubbed += rubbed;
 
         if (soapy)
             soapLoad = Mathf.Max(0f, soapLoad - rubbed * soapPerMeter);

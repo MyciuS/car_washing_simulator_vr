@@ -62,6 +62,14 @@ public class WaterGun : MonoBehaviour
             currentSpray.Stop();
     }
 
+    // True while the player holds the gun.
+    public bool IsHeld => grabInteractable != null && grabInteractable.isSelected;
+
+    // The head clicked onto the tip, or null when there is none (the normal water jet).
+    public SprayHead AttachedHead => headSocket.hasSelection
+        ? headSocket.firstInteractableSelected.transform.GetComponent<SprayHead>()
+        : null;
+
     // The head's spray if a head is on the tip, otherwise the normal water jet.
     ParticleSystem GetSpray()
     {
