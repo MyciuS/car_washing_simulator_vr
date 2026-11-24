@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d354a51f6335acd4fba2875171f5dfa0, type: 3}
   m_Name: Water
   m_EditorClassIdentifier: Assembly-CSharp::CleaningTool
-  radius: 0.08
-  looseDirtRemoval: 0.005
+  radius: 0.12
+  looseDirtRemoval: 0.02
   grimeRemoval: 0
-  soakedLooseDirtRemoval: 0.05
-  soakedGrimeRemoval: 0.04
+  soakedLooseDirtRemoval: 0.15
+  soakedGrimeRemoval: 0.12
   soapAdded: 0
   soapSoakTime: 30
-  soapRinse: 0.05
+  soapRinse: 0.3
   wetnessAdded: 0.04
   drying: 0
   polish: 0

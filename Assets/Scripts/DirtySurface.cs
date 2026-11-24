@@ -18,6 +18,14 @@ public class DirtySurface : MonoBehaviour
     // Leave empty for random road dirt (more mud low on the car).
     public Texture2D dirtMask;
 
+    // How dirty this car starts (1 = normal, 0.4 = only a bit dusty, 1.4 = caked in mud).
+    [Range(0.2f, 1.5f)]
+    public float dirtiness = 1f;
+    // Each time the game starts the car is randomly up to this much cleaner or dirtier,
+    // so it doesn't look exactly the same every time.
+    [Range(0f, 0.5f)]
+    public float randomDirtiness = 0.15f;
+
     [Header("Dirt colors")]
     public Color lightMudColor = new Color(0.55f, 0.45f, 0.32f);
     public Color darkMudColor = new Color(0.28f, 0.21f, 0.14f);
@@ -59,6 +67,9 @@ public class DirtySurface : MonoBehaviour
     // (parts of a texture can be empty space between the pieces of the model).
     Vector3[] pixelPosition;
     bool[] onSurface;
+    // Pixels the player can reach with a tool: on the outside of the car and not underneath it.
+    // Only these count towards how clean the car is (nobody can scrub the inside of a door panel).
+    bool[] reachable;
     float[] looseDirt;
     float[] grime;
     float[] mudShade;
@@ -95,6 +106,8 @@ public class DirtySurface : MonoBehaviour
     float nextSoakRefresh;
     // Less soap than this is invisible, so it counts as no soap (no bonus, gets rinsed away).
     const float MinSoap = 0.05f;
+    // All the dirt the surface started with, to work out how much of it has been cleaned off.
+    float startingDirt;
 
     void Start()
     {
@@ -109,6 +122,7 @@ public class DirtySurface : MonoBehaviour
         FindPixelPositions(mesh);
         FindDownhillPixels();
         MakeStartingDirt(dirtMask != null ? ReadTexture(dirtMask) : null);
+        LetPlayerPassThrough();
 
         // A texture that shows paint + dirt, put on this object's material.
         surfaceTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
@@ -173,7 +187,10 @@ public class DirtySurface : MonoBehaviour
         int[] triangles = mesh.triangles;
         pixelPosition = new Vector3[width * height];
         onSurface = new bool[width * height];
+        reachable = new bool[width * height];
         Vector2 size = new Vector2(width, height);
+        Collider[] carColliders = CarRoot().GetComponentsInChildren<Collider>();
+        Physics.SyncTransforms();
 
         for (int t = 0; t < triangles.Length; t += 3)
         {
@@ -187,6 +204,7 @@ public class DirtySurface : MonoBehaviour
             float area = (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
             if (Mathf.Abs(area) < 1e-9f)
                 continue;
+            bool canReach = CanReach(pa, pb, pc, carColliders);
 
             int minX = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.x, Mathf.Min(b.x, c.x))));
             int maxX = Mathf.Min(width - 1, Mathf.CeilToInt(Mathf.Max(a.x, Mathf.Max(b.x, c.x))));
@@ -206,6 +224,7 @@ public class DirtySurface : MonoBehaviour
                     int i = y * width + x;
                     pixelPosition[i] = pa * wa + pb * wb + pc * wc;
                     onSurface[i] = true;
+                    reachable[i] = canReach;
                 }
             }
         }
@@ -230,9 +249,51 @@ public class DirtySurface : MonoBehaviour
                         continue;
                     pixelPosition[i] = pixelPosition[n];
                     onSurface[i] = true;
+                    reachable[i] = reachable[n];
                 }
             }
         }
+    }
+
+    // The whole car this surface belongs to: the object with CarToWash on it, or else the top object.
+    // (Not always the top object: the NPC cars sit together under one "NPCs" object.)
+    Transform CarRoot()
+    {
+        CarToWash car = GetComponentInParent<CarToWash>();
+        return car != null ? car.transform : transform.root;
+    }
+
+    // In VR the player's body follows their head. Leaning over the car to scrub it would make the
+    // body walk up the hood like a ramp and end up standing on the car. So the player's body
+    // (its CharacterController) goes through the car instead. Tools still touch it and clean it.
+    void LetPlayerPassThrough()
+    {
+        Collider[] carColliders = CarRoot().GetComponentsInChildren<Collider>();
+        foreach (CharacterController body in FindObjectsByType<CharacterController>())
+        {
+            foreach (Collider carCollider in carColliders)
+                Physics.IgnoreCollision(body, carCollider);
+        }
+    }
+
+    static readonly RaycastHit[] reachHits = new RaycastHit[8];
+
+    // Can the player reach this triangle of the car with a tool? Not if it faces down (under the car),
+    // and not if looking straight out of it you run into the car itself (it is on the inside of the car).
+    static bool CanReach(Vector3 a, Vector3 b, Vector3 c, Collider[] carColliders)
+    {
+        Vector3 normal = Vector3.Cross(b - a, c - a).normalized;
+        if (normal.y < -0.6f)
+            return false;
+        Vector3 center = (a + b + c) / 3f;
+        int count = Physics.RaycastNonAlloc(center + normal * 0.01f, normal, reachHits, 3f,
+            Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+        for (int h = 0; h < count; h++)
+        {
+            if (System.Array.IndexOf(carColliders, reachHits[h].collider) >= 0)
+                return false;
+        }
+        return true;
     }
 
     // For every pixel, finds the neighbouring pixel that is lowest on the car: that is where soap runs to.
@@ -247,7 +308,7 @@ public class DirtySurface : MonoBehaviour
         float pixelSize = 1f / pixelsPerMeter;
         const float steep = 0.3f; // flatter than this (about 17 degrees) and soap stays put
         Bounds car = GetComponent<Renderer>().bounds;
-        foreach (Renderer r in transform.root.GetComponentsInChildren<Renderer>())
+        foreach (Renderer r in CarRoot().GetComponentsInChildren<Renderer>())
             car.Encapsulate(r.bounds);
         carCenter = car.center;
 
@@ -323,7 +384,7 @@ public class DirtySurface : MonoBehaviour
                 // It drips onto the floor just outside the car.
                 Vector3 outward = pixelPosition[i] - carCenter;
                 outward.y = 0f;
-                WetGround.Splash(pixelPosition[i] + outward.normalized * 0.12f, 0.1f, running * 0.3f, running * 0.5f);
+                WetGround.Splash(pixelPosition[i] + outward.normalized * 0.12f, 0.15f, running * 0.3f, running * 0.5f);
             }
         }
         if (soapMoved.Count == 0)
@@ -393,6 +454,10 @@ public class DirtySurface : MonoBehaviour
         pixels = new Color32[count];
         float seed = Random.value * 100f;
         float groundY = LowestPointOfCar();
+        // How dirty this car is this time. A less dirty car also gets clean patches here and there
+        // (the dirt is thinned out, and then a little is taken off everywhere).
+        float amount = Mathf.Clamp(dirtiness + Random.Range(-randomDirtiness, randomDirtiness), 0.2f, 1.5f);
+        float thinOut = Mathf.Max(0f, 1f - amount) * 0.08f;
 
         for (int i = 0; i < count; i++)
         {
@@ -410,18 +475,58 @@ public class DirtySurface : MonoBehaviour
                     looseDirt[i] = Mathf.Clamp01(0.35f + road * 0.7f + (patches - 0.5f) * 0.8f
                                                  + Mathf.SmoothStep(0.55f, 0.8f, splashes) * 0.3f + (grain - 0.5f) * 0.2f);
                 grime[i] = Mathf.Clamp01(0.35f + patches * 0.4f);
+                looseDirt[i] = Mathf.Clamp01(looseDirt[i] * amount - thinOut);
+                grime[i] = Mathf.Clamp01(grime[i] * amount - thinOut);
                 mudShade[i] = Mathf.Clamp01(0.3f + road * 0.5f + (splashes - 0.5f) + (grain - 0.5f) * 0.4f);
                 foamVariation[i] = Mathf.Clamp01(Noise(p * 20f, seed + 130f));
+                if (reachable[i])
+                    startingDirt += DirtAt(i);
             }
             UpdatePixel(i);
         }
     }
 
+    // How dirty one pixel looks: mud, plus the part of the grime that shows.
+    float DirtAt(int i)
+    {
+        return looseDirt[i] + grime[i] * grimeStrength;
+    }
+
+    // How clean this surface is: 0 = as dirty as it started, 1 = all the dirt is gone.
+    // Soap still on it counts against it, so the car has to be rinsed too: thick foam counts fully,
+    // a thin leftover film only a little. Only the parts a player can reach count (see reachable).
+    public float GetCleanliness()
+    {
+        if (looseDirt == null)
+            return 0f;
+        float dirtLeft = 0f;
+        int pixelsOnSurface = 0;
+        float soapLeft = 0f;
+        for (int i = 0; i < looseDirt.Length; i++)
+        {
+            if (!reachable[i])
+                continue;
+            pixelsOnSurface++;
+            dirtLeft += DirtAt(i);
+            if (soap[i] >= MinSoap)
+                soapLeft += Mathf.Clamp01(soap[i] / FullFoam);
+        }
+        float dirtRemoved = startingDirt > 0f ? 1f - dirtLeft / startingDirt : 1f;
+        float soapy = pixelsOnSurface > 0 ? soapLeft / pixelsOnSurface : 0f;
+        return Mathf.Clamp01(dirtRemoved) * (1f - soapy);
+    }
+
+    // This much soap (or more) on a pixel counts as fully soapy for GetCleanliness.
+    const float FullFoam = 0.4f;
+
+    // How many pixels this surface has (bigger surfaces count more towards how clean the whole car is).
+    public int PixelCount => width * height;
+
     // The lowest point of the whole car (all its meshes), used as "the ground" for road dirt.
     float LowestPointOfCar()
     {
         float lowest = float.MaxValue;
-        foreach (MeshRenderer r in transform.root.GetComponentsInChildren<MeshRenderer>())
+        foreach (MeshRenderer r in CarRoot().GetComponentsInChildren<MeshRenderer>())
             lowest = Mathf.Min(lowest, r.bounds.min.y);
         return lowest;
     }

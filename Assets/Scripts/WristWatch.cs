@@ -62,9 +62,17 @@ public class WristWatch : MonoBehaviour
             ShowPage((currentPage + 1) % pages.Length);
         }
 
-        // Clock page
-        timeText.text = DateTime.Now.ToString("HH:mm");
-        dateText.text = DateTime.Now.ToString("ddd, d MMM");
+        // Clock page: game time (see GameClock), or the real time if there is no game clock.
+        if (GameClock.Instance != null)
+        {
+            timeText.text = GameClock.Instance.TimeText;
+            dateText.text = "Day " + GameClock.Instance.Day;
+        }
+        else
+        {
+            timeText.text = DateTime.Now.ToString("HH:mm");
+            dateText.text = DateTime.Now.ToString("ddd, d MMM");
+        }
 
         // Stats page (bars go from 0 to 1)
         energyBar.fillAmount = playerStats.energy / 100f;
